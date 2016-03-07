@@ -1,0 +1,384 @@
+<script src="js/coge/wikifeed.js"></script>
+<script src="js/coge/utils.js"></script>
+<script language="javascript">
+$(document).ready(function(){
+    var feed = new wikifeed("<tmpl_var name=wikifeed>", $("#wikifeed"));
+    pageObj = new Object();
+    pageObj.index=0;//Math.floor(Math.random()*20);
+
+    var images = new Array(
+        ["jbrowse-genome-view.png", "View your data in the new EPIC-CoGe browser built with JBrowse, including annotation, quantitative measurements, SNPs, and RNA-seq alignments!", "EPIC-CoGe"],
+        ["500px-SynPlot-Chr1-At-v-Al.png","Syntenic dotplot of Arabidopsis thaliana versus Arabidopsis lyrata with synonymous mutations","Syntenic_comparison_of_Arabidopsis_thaliana_and_Arabidopsis_lyrata"],
+        ["GenomeView-MG1655.png", "Visualizing a prophage insertion in E. coli K12 MG1655 by differences in genome structure", "Horizontal_Gene_Transfer"],
+        ["Os-Sb-CNS-rich.png", "Syntenic MYB with many conserved non-coding-sequences(CNSs).  Purple were computationally predicted; pink with lines are emperically determined for proofing.", "CNS-rich_grass_MYB_gene"],
+        ["600px-Maize-sorghum-cns.png", "Identifying fractionation and conserved non-coding sequences in maize and sorghum", "Maize_Sorghum_Syntenic_dotplot"],
+        ["gevo-synteny.png", "High-resolution sequence analysis of syntenic regions of Arabidopsis derived from its most recent genome duplication event.", "Syntenic_comparison_of_Arabidopsis_thaliana_and_Arabidopsis_lyrata"],
+        ["500px-3440_3441.CDS-CDS.blastn.dag_geneorder_D20_g10_A5.1-1.w800.png", "Shewanella baltica strains syntenic dotplot showing an x-alignment","X-alignment"],
+        ["800px-Master_3068_8.CDS-CDS.blastn_geneorder_D20_g10_A5.w2000.ks.png","Syntenic dotplot of Arabidopsis thaliana vs lyrata","Syntenic_comparison_of_Arabidopsis_thaliana_and_Arabidopsis_lyrata"],
+        ["Master_2361_2360.CDS-CDS.blastn_geneorder_D20_g10_A5.w500.png","Acidovorax syntenic dotplot showing an x-alignment","X-alignment"],
+        ["600px-System_framework.png","CoGe's open-ended interconnected analysis network","CoGe_system_arcitecture"],
+        ["600px-Syntenic_dotplot_medicago_truncatula_v2_vs_v3.png","Comparison of new and old genome assemblies of Medicago truncatula","Syntenic_dotplot_medicago_truncatula_version_3_versus_version_2"],
+        ["800px-GenomeView_GEvo-links.png", "Visualizing variation in GC content and links for syntenic gene analyses", "GenomeView_examples#GEvo_Links"],
+
+        ["500px-Reconstructingchromosomes.png", "Reconstruting maize chromosomes through syntenic dotplot comparisons to sorghum", "Splitting_maize_genome"],
+        ["Grapevine-peach_K2_historgram.png","Historgram of synonymous mutation values between grape and peach","Syntenic_dotplot_of_peach_versus_grape"],
+        //["k12-CDS-aa-usage.png","E. coli's amino acid usage as a function of CDS GC content","CodeOn"],
+        ["600px-Plasmodium-codon-substitution-matirx.png", "Codon substitution matrix of two Plasmodia species","Plasmodia_comparative_genomics"],
+        ["800px-Human-mouse-tandem-gene-duplication.png","Human-mouse syntenic comparison showing a conserved tandem gene cluster","Local_Gene_Duplication"],
+        ["600px-SynPlot-Chr1-At-v-Al.png", "Synonymous mutation histogram of syntenic genes between two species of Arabidopsis showing orthologous pairs and those derived from a shared whole genome duplication event","Syntenic_comparison_of_Arabidopsis_thaliana_and_Arabidopsis_lyrata"],
+        ["600px-CoGeBlast-At1g02120-eval.png", "CoGeBlast evaluating potential homologous hits", "Phylogenetics_in_CoGe#Evaluate_potential_homologs_in_CoGeBlast_and_select_the_.22good.22_ones"],
+        ["Plasmodium_knowlesi_cds_gc_content_histogram.png", "GC content distribution for all protein sequences of a Plasmodium species","Plasmodia_comparative_genomics"],
+        ["FeatMap-screenshot.png", "Identifying genomic distributions of gene families", "GenomeMap"],
+        ["GEvo-ecoli-insertion-direct-repeats.png", "Identifying direct repeats flanking an insertion in E. coli", " Analysis_of_variations_found_in_genomes_of_Escherichia_coli_strain_K12_DH10B_and_strain_B_REL606_using_SynMap_and_GEvo_analysis#High-resolution_GEvo_analysis_of_an_insertion:_finding_direct_sequence_repeats"],
+        ["800px-GeLo-nucleotides.png", "Visualizing individual nucleotides with GenomeView", "GenomeView_examples#Chromosome_Background"],
+        ["600px-Phylogeny_fr_PhyML.png","Linking to phylogeny.fr for one-click phylogenetics","Phylogenetics_in_CoGe#Send_sequences_to_phylogeny.fr"]
+    );
+
+    var path = "https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&playlistId=PLX4g0G-7D3_BZrxXnrO_-W7Q12NjrDUBX&key=AIzaSyAH3DLaPmE8bYok1SylK_0Gv2CiRXkrHQs";
+
+    images.forEach(function(value, index, list) {
+        var im = new Image();
+        im.src = "./picts/home_page/" + value[0];
+        value[0] = im;
+        return value;
+    });
+
+    getYoutubeVideos(path, function(videos) {
+        var first = videos.shift();
+        var list = coge.utils.shuffle(images.concat(videos));
+        list.unshift(first);
+
+        cross_fade("#crossfade", list, 1);
+    });
+
+    $("#genome_dialog").dialog({
+        title: "Recently Added Genomes",
+        width: 550,
+        autoOpen: false,
+        position: {
+            my: "center",
+            at: "bottom",
+            of: $("#stats")
+        },
+        show: {
+            effect: "fade",
+            duration: 800
+        }
+    });
+
+    get_latest_genomes(5).then(load_latest.bind(undefined, $("#latest-genomes")));
+});
+
+function show_genomes(e) {
+    if (e) e.preventDefault();
+    $("#genome_dialog").dialog("open");
+
+    var limit = $('#limit').val();
+    var container = $("#genomes-list").slideUp().html("");
+    get_latest_genomes(limit).then(load_latest.bind(undefined, container));
+}
+
+function getYoutubeVideos(path, callback) {
+    var parseVideos = function(channel) {
+        var entries = channel.items;
+        var videos = [];
+
+        for (var i=0; i< entries.length; i++) {
+            var id = entries[i].snippet.resourceId.videoId;
+            var title = entries[i].snippet.title;
+            var thumbnail = entries[i].snippet.thumbnails.high.url;
+
+            var src = 'https://www.youtube.com/embed/' + id
+            + '?wmode=transparent&amp;HD=0&amp;rel=0&amp;showinfo=0&amp;'
+            + 'controls=1&amp;fs=1&amp;autoplay=1';
+
+            var vid = $('<iframe frameborder="0" allowfullscreen><iframe>')
+                .attr("src", src);
+
+            var overlay = $("<img class='overlay' src='picts/youtube-play-button.png'>")
+                .css("width", "20%");
+
+            var youtubeHack = $("<div id='youtube-hack' class='youtube-hack'></div>");
+
+            var element = $('<img></img>', {"id": id, src: thumbnail})
+                .css("width", "100%")
+                .css("max-height", "45%");
+
+            youtubeHack.append(element);
+            youtubeHack.append(overlay);
+
+            videos.push([youtubeHack, title, null, vid]);
+        }
+
+        callback(videos);
+    }
+
+    $.ajax({
+        url: path,
+        dataType: "json",
+        success: parseVideos
+    });
+}
+
+function cross_fade(selector, image, delay) {
+    var element = $(selector),
+        loop_timeout,
+        index = 0,
+        pause_time = 8000,
+        fade_time = 1500
+        paused = true;
+
+    var run_button = $("<div></div>")
+            .addClass("coge-button-border ui-icon")
+            .addClass("ui-icon ui-icon-pause")
+            .css("margin", "0 2%")
+            .on("click", $.proxy(pause, this));
+
+    var next_button = $("<div></div>")
+            .addClass("coge-button-border ui-icon")
+            .addClass("ui-icon-arrowthick-1-e")
+            .on("click", $.proxy(next, this));
+
+    var prev_button = $("<div></div>")
+            .addClass("coge-button-border ui-icon")
+            .addClass("ui-icon-arrowthick-1-w")
+            .on("click", $.proxy(previous, this));
+
+    var controls = $("<div></div>")
+        .css("margin", "0px 0 10px 0")
+        .css("text-align", "center")
+        .append(prev_button)
+        .append(run_button)
+        .append(next_button);
+
+    var viewer = $("<div></div>")
+        .addClass("link")
+        .css("text-align", "center")
+        .css("padding", "5px");
+
+    element.append(controls)
+        .append(viewer)
+        .show();
+
+    function animate(duration) {
+        var transition = function() {
+            var elem = $(image[index][0])
+                    .css("max-width", "100%")
+
+            var wrapper = $("<div></div>")
+                .append(elem);
+
+            var description = $("<div></div>")
+                .addClass("padded")
+                .css("width", "80%")
+                .css("margin", "0 auto")
+                .css("float", "none")
+                .text(image[index][1]);
+
+            viewer.unbind();
+
+            if(image[index].length === 4) {
+                viewer.on("click", $.proxy(pause, run_button))
+                    .on("click", function() { elem.replaceWith($(image[index][3]).css("width", "95%").css("height", "500px")); });
+            } else {
+                viewer.on("click", function() { window.open("https://genomevolution.org/wiki/index.php/"+image[index][2]); });
+            }
+
+            viewer.html("")
+                .append(elem)
+                .append(description)
+                .fadeIn(duration);
+        };
+
+        viewer.fadeOut(duration, transition);
+    }
+
+    function loop() {
+        index = (++index < image.length) ? index : 0;
+        animate(fade_time);
+        loop_timeout = setTimeout(loop, pause_time);
+    }
+
+    function next() {
+        index = (++index < image.length) ? index : 0;
+
+        if (!paused) {
+            clearTimeout(loop_timeout);
+            loop_timeout = setTimeout(loop, pause_time);
+        }
+
+        animate(0);
+    }
+
+    function previous() {
+        index = (--index >= 0) ? index : image.length - 1;
+
+        if (!paused) {
+            clearTimeout(loop_timeout);
+            loop_timeout = setTimeout(loop, pause_time);
+        }
+
+        animate(0);
+    }
+
+    function resume() {
+        run_button
+            .removeClass("ui-icon-play")
+            .addClass("ui-icon-pause")
+            .unbind()
+            .on("click", $.proxy(pause, this));
+
+        paused = false;
+        animate(0);
+        loop_timeout = setTimeout(loop, pause_time);
+    }
+
+    function pause() {
+        paused = true;
+        run_button
+            .removeClass("ui-icon-pause")
+            .addClass("ui-icon-play")
+            .unbind()
+            .on("click", $.proxy(resume, this));
+
+        clearTimeout(loop_timeout);
+        return this;
+    }
+
+    resume();
+}
+
+function load_latest(container, content) {
+    var i,
+        entry,
+        name,
+        wrapper,
+        added;
+
+    for(i = 0; i < content.length; i++) {
+        wrapper = $("<div></div>");
+
+        if (content[i].added === null) {
+            added = "Unknown"
+        } else {
+            added = new Date(content[i].added).toDateString();
+        }
+
+        entry = $("<h4></h4>")
+            .html(added)
+            .css("width", "10em")
+            .addClass("inline");
+
+        name = $("<a></a>", { href: content[i].url, text: content[i].organism });
+        name.addClass("inline");
+
+        wrapper.append(entry).append(name);
+        container.append(wrapper);
+    }
+
+    container.slideDown();
+}
+
+function get_latest_genomes(limit) {
+    return $.getJSON("index.pl?fname=get_latest_genomes&limit="  + limit);
+}
+</SCRIPT>
+
+<TMPL_IF NAME="INTRO">
+    <div id="stats" class="coge-shaded coge-shadow">
+        <ul class="horizontal small bold">
+                <li>Organisms: <span style="color:darkgreen"><TMPL_VAR NAME="ORG_COUNT"></span></li>
+                <li>Genomes: <span style="color:darkgreen"><TMPL_VAR NAME="GEN_COUNT"></span></li>
+                <li>Features: <span style="color:darkgreen"><TMPL_VAR NAME="FEAT_COUNT"></span></li>
+                <li>Annotations: <span style="color:darkgreen"><TMPL_VAR NAME="ANNOT_COUNT"></span></li>
+                <li>Experiments: <span style="color:darkgreen"><TMPL_VAR NAME="EXP_COUNT"> (<TMPL_VAR NAME="QUANT_COUNT"> values)</span></li>
+        </ul>
+    </div>
+
+<div class="wrapper">
+    <div id="intro">
+        <div class="coge-section coge-shadow">
+            <h3>New to CoGe?</h3>
+            <div class="padded" style="color:dimgray;">
+            CoGe is a platform for performing Comparative Genomics research.  It provides an open-ended network of interconnected tools to manage, analyze, and visualize next-gen data.
+            </div>
+            <br>
+            <ul class="horizontal">
+                <li>
+                    <a href="https://genomevolution.org/wiki/index.php/New_to_CoGe">Get started</a>
+                </li>
+                <li>
+                    <a href="https://genomevolution.org/wiki/index.php/How_to_get_a_CoGe_account">Create an Account</a>
+                </li>
+                <li>
+                    <a href="https://genomevolution.org/wiki/index.php/Tutorials">Tutorials</a>
+                </li>
+                <li>
+                    <a href="https://genomevolution.org/wiki">Documentation</a>
+                </li>
+                <li>
+                    <a href="https://genomevolution.org/wiki/index.php/FAQs">FAQ</a>
+                </li>
+            </ul>
+        </div>
+
+        <div class="coge-section coge-shadow">
+            <h3>Tools</h3>
+            <TMPL_LOOP NAME="ACTIONS">
+                <div class="coge-summary">
+                    <a href="<tmpl_var name=LINK>" class="l">
+                        <img src="<tmpl_var name=LOGO>">
+                    </a>
+                    <div class="coge-summary-body">
+                        <h4 class="coge-summary-heading">
+                            <a href="<tmpl_var name=LINK>"><TMPL_VAR NAME="ACTION"></a>
+                        </h4>
+                        <TMPL_VAR NAME="DESC">
+                    </div>
+                </div>
+            </TMPL_LOOP>
+        </div>
+
+        <div class="coge-section coge-shadow">
+            <h3>What do you want to do?</h3>
+            <div id="info" class="r hidden">
+            
+            </div>
+            <div>
+	            <p><a href="SynMap.pl">Compare two genomes</a></p>
+	            <p><a href="OrganismView.pl">Browse a genome</a></p>
+	            <p><a href="LoadGenome.pl">Load a new genome</a></p>
+	            <p><a href="LoadExperiment.pl">Load experimental data</a></p>
+	            <p><a href="LoadExperiment.pl">Run the RNA-seq pipeline</a></p>
+	            <p><a href="CoGeBlast.pl">Blast against CoGe's genomes</a></p>
+	            <p><a href="User.pl">Browse & share data you've loaded</a></p>
+            </div>
+        </div>
+
+        <div class="coge-section coge-shadow">
+            <h3>Recently Added Genomes <small>(<a href="#" onclick="show_genomes(window.event)">more</a>)</small></h3>
+            <div id="latest-genomes" class="padded">
+            </div>
+        </div>
+    </div>
+
+    <div id="highlights">
+        <div id="wikifeed" class="coge-section coge-shadow">
+            <h3>Latest News</h3>
+        </div>
+        <div class="coge-section coge-shadow">
+            <h3>Tutorials</h3>
+            <div id="crossfade"></div>
+        </div>
+    </div>
+    </TMPL_IF>
+</div>
+
+<div id="genome_dialog" style="display: none;" class="coge-section">
+    <label for="limit">Number returned:</label>
+    <input id="limit" class="backbox" type="textbox" size="3" value="10">
+    <span class='ui-button ui-corner-all coge-button' onClick="show_genomes(window.event)">Go</span>
+    <br>
+    <br>
+    <div id="genomes-list" style="max-height: 500px;" class="coge-scroll coge-striped-even"></div>
+</div>

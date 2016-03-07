@@ -1,0 +1,221 @@
+<TMPL_IF NAME=JAVASCRIPT>
+
+<SCRIPT language="JavaScript">
+$(document).ready(function(){
+	pageObj.fids = "<TMPL_VAR NAME=FIDS>";
+	setup_tabs();
+	update_options();
+	var autogo = <TMPL_VAR NAME=AUTOGO>;
+         if (autogo) {
+          loading([],['results']);
+	  ajax_wait("prepare_run();");
+	  }
+
+});
+
+function ajax_wait (val){
+if (ajax.length)
+   {
+    setTimeout("ajax_wait("+'"'+val+'"'+")",100);
+    return;
+   }
+  eval(val);
+}
+
+function update_options(){
+
+	var type;
+	if ($('#seq_type_dna')[0].checked)
+           {type = 'dna';}
+        else {type='prot';}
+
+	if(type == 'dna')
+	{
+		$('#prot_matrix').hide(0);
+		$('#dna_matrix').show(0);
+		$('#gap_open').val(15);
+		$('#gap_ext').val(6.66);
+		$('#prot_results_format').hide(0);
+		$('#dna_results_format').show(0);
+	}
+	else
+	{
+		$('#dna_matrix').hide(0);
+		$('#prot_matrix').show(0);
+		$('#gap_open').val(10);
+		$('#gap_ext').val(0.2);
+		$('#dna_results_format').hide(0);
+		$('#prot_results_format').show(0);
+	}
+        $('#seq_box').val('loading. . .');
+        refresh_seq(['args__fids','args__'+pageObj.fids,'args__seq_type','args__'+type],['seq_box']);
+}
+
+function prepare_run(){
+	$('#results').html('<div class="loading dna">Running alignment. . .</div>');
+	var type;
+	if($('#seq_type_dna:checked').val()) type='dna';
+	else type="prot";
+
+	var gap_open = $('#gap_open').val();
+	var gap_ext = $('#gap_ext').val();
+	var iteration = $('#iteration').val();
+
+	var matrix; //for clustalw
+
+	if(type == 'dna') matrix = $('#dna_matrix').val();
+	else matrix = $('#prot_matrix').val();
+
+	run([
+	'args__seq_type','args__'+type,
+	'args__gap_open','args__'+gap_open,
+	'args__gap_ext','args__'+gap_ext,
+	'args__seq','seq_box',
+	'args__matrix','args__'+matrix,
+	'args__iteration','args__'+iteration,
+	'args__codon_align','codon_align',
+	'args__fids','args__'+pageObj.fids,
+	],[gather_results],['POST']);
+}
+
+function gather_results(html){
+	$('#results').html(html).show(0);
+	var size = $('.resultborder').width();
+	$('#max_height').width(size+30);
+        setup_button_states();
+	$("#select_feats").dialog({height: 250, width: 400, autoOpen: false});
+
+}
+
+function clear_box(box){
+	 if(box.value == "Enter Fasta Sequences here")
+	 {
+		box.value = null;
+	}
+}
+
+function setup_tabs() {
+ $(function(){
+   $('#tabs').tabs({
+    selected: 0,
+   });
+ });
+}
+
+function feature_checkboxes(){
+
+  var accn="";
+  $('#select_feats :checkbox').each(function(){
+     if (this.checked == true) accn = accn + ";fid="+this.id;
+   });
+  if (!accn) {
+    alert("You have not checked any features.");
+    return;
+  }
+  window.open('FeatList.pl?'+accn);
+}
+
+</SCRIPT>
+</TMPL_IF>
+
+<TMPL_IF NAME=MAIN>
+
+<span id=go style="font-size: 1em" class='ui-button ui-button-go ui-corner-all' onClick="loading([],['results']); prepare_run()">Run CoGe Align!</span>
+<div id=tabs>
+<!-- set up tabs -->
+<ul>
+  <li class=small><a href="#tabs-1">Sequence Submission</a></li>
+  <li class=small><a href="#tabs-2">Alignment Options</a></li>
+<!--  <li class=small><a href="#tabs-3">Output Options</a></li>-->
+</ul>
+
+<div id="tabs-1">
+<br>
+<textarea class="backbox" type="textarea" onClick="clear_box(this)" name="seq_box" id ="seq_box" wrap=off cols=80 rows=15><TMPL_VAR NAME="SEQUENCE"></textarea>
+<TMPL_IF NAME="COGE_SEQS">
+<br>
+Sequence Type:
+<label><input type=radio id=seq_type_dna  name=seq_type value="dna" onclick="update_options();"  <TMPL_VAR NAME="DNA_ALIGN"> >DNA</label>
+<label><input type=radio id=seq_type_prot name=seq_type value="prot" onclick="update_options();" <TMPL_VAR NAME="PROTEIN_ALIGN"> >Protein</label>
+<br>
+Generate codon alignment using protein sequences?
+<select class="backbox" name="codon_align" id="codon_align" tabindex="1" onchange="$('#seq_type_prot').attr('checked','checked');update_options();">
+     <option value=1 <TMPL_VAR NAME="CODON_ALIGN_YES"> >Yes</option>
+     <option value=0 <TMPL_VAR NAME="CODON_ALIGN_NO">  >No</option>
+</select>
+
+</TMPL_IF>
+
+</div> <!--end div tag for tabs_1-->
+
+<div id="tabs-2">
+
+<table>
+<tr><Td>Select Data Matrix:
+<td><select name=dna_matrix id=dna_matrix>
+<option value=IUB>IUB
+<option value=CLUSTALW>CLUSTALW
+</select>
+
+<select name=prot_matrix id=prot_matrix style="display:none">
+<option value=BLOSUM>BLOSUM
+<option value=PAM>PAM
+<option value=GONNET>GONNET
+<option value=ID>ID
+</select>
+<tr><td>Gap Open:
+<td><input type=text size="6" id=gap_open value="15">
+<tr><td>Gap Extend:
+<td><input type=text size="6" id=gap_ext value="6.66">
+<tr><Td>Iteration:
+<td><select id=iteration>
+<option value=NONE>None
+<option value=TREE>Tree
+<option value=ALIGNMENT>Alignment
+</select>
+</table>
+
+</div> <!--end div tag for tabs_2-->
+
+<!--
+<div id="tabs-3">
+<table>
+<tr><Td>Results Format:
+<td><select id=dna_results_format>
+<option value=clustal>Clustal Default
+<option value=GDE>GDE
+<option value=PHYLIP>Phylip
+<option value=PIR>PIR
+<option value=NEXUS>NEXUS
+</select>
+<select id=prot_results_format style="display:none">
+<option value=clustal>Clustal Default
+<option value=GDE>GDE
+<option value=PHYLIP>Phylip
+<option value=PIR>PIR
+<option value=NEXUS>NEXUS
+</select>
+</div>
+<tr><td>Generate Scoring Matrix for Alignment
+<td><input type=checkbox id="gen_matrix">
+<span class="small">(Using the method describe in Henikoff and Henikoff, 1992)</span>
+</table>
+</div>-->
+
+</TMPL_IF>
+
+<TMPL_IF NAME="RESULTS_DIV">
+ <div id=results></div><br/>
+</TMPL_IF>
+
+<TMPL_IF NAME=FEATURE_SELECT>
+<span class='ui-button ui-corner-all ' onclick="$('#select_feats').dialog('open')">Open Feature Selection Box</span>
+<div class="backbox dialog" id="select_feats" title="Select features:"><div class=small>
+ <TMPL_LOOP NAME=FEATS>
+  <input type=checkbox id=<TMPL_VAR NAME=ID>><TMPL_VAR NAME=NAME><br>
+ </TMPL_LOOP>
+</div>
+Send Checked Features to <span class='ui-button ui-corner-all ui-button-icon-right' onclick="feature_checkboxes();"><span class="ui-icon ui-icon-extlink"></span>FeatList</span><br>
+<span class='ui-button ui-corner-all' onclick="$('#select_feats :checkbox').attr('checked', false);">Uncheck All</span>
+</div>
+</TMPL_IF>

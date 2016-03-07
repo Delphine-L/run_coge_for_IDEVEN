@@ -1,0 +1,2 @@
+Can't locate CoGe/Accessory/Web.pm in @INC (@INC contains: /homedir/lariviere/tool/coge/modules /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 .) at /home/lariviere/tool/coge/web/bin/SynMap/quota_align_coverage.pl line 7.
+BEGIN failed--compilation aborted at /home/lariviere/tool/coge/web/bin/SynMap/quota_align_coverage.pl line 7.

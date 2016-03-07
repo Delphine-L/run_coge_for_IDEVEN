@@ -1,0 +1,1 @@
+{"provides":{"GD::Text::Wrap":{"version":"1.20","file":"Text/Wrap.pm"},"GD::Text::Align":{"version":"1.18","file":"Text/Align.pm"},"GD::Text":{"version":"0.86","file":"Text.pm"}},"target":"GD::Text","version":"0.86","name":"GD::Text","dist":"GDTextUtil-0.86","pathname":"M/MV/MVERB/GDTextUtil-0.86.tar.gz"}

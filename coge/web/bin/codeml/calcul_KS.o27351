@@ -1,0 +1,18 @@
+DBIx::Class::Schema::throw_exception(): DBIx::Class::Row::throw_exception(): Can't locate DBIxProfiler.pm in @INC (@INC contains: /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 .) at /usr/local/share/perl5/CoGe/Accessory/Web.pm line 10.
+BEGIN failed--compilation aborted at /usr/local/share/perl5/CoGe/Accessory/Web.pm line 10.
+Compilation failed in require at /usr/local/share/perl5/CoGe/Core/Storage.pm line 31.
+BEGIN failed--compilation aborted at /usr/local/share/perl5/CoGe/Core/Storage.pm line 31.
+Compilation failed in require at /usr/local/share/perl5/CoGeX/Result/Dataset.pm line 8.
+BEGIN failed--compilation aborted at /usr/local/share/perl5/CoGeX/Result/Dataset.pm line 8.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /usr/share/perl5/vendor_perl/Class/C3/Componentised.pm line 135.
+Compilation failed in require at /home/lariviere/tool/coge/web/bin/SynMap/kscalc.pl line 13.
+BEGIN failed--compilation aborted at /home/lariviere/tool/coge/web/bin/SynMap/kscalc.pl line 13.

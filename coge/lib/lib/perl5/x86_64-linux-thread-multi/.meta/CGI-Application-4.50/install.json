@@ -1,0 +1,1 @@
+{"provides":{"CGI::Application":{"version":"4.50","file":"lib/CGI/Application.pm"},"CGI::Application::Mailform":{"version":"0","file":"lib/CGI/Application/Mailform.pm"}},"target":"CGI::Application","version":"4.50","name":"CGI::Application","dist":"CGI-Application-4.50","pathname":"M/MA/MARKSTOS/CGI-Application-4.50.tar.gz"}

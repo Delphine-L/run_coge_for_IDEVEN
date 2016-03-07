@@ -1,0 +1,724 @@
+<TMPL_IF NAME="MAIN">
+    <div id="results" class="padded hidden"></div>
+  <tmpl_if name="BETA">
+    <div class="small" style="padding-bottom: 5px; color: dimgray;">
+        <span class="large">Welcome to the <span class="alert">new beta version</span> of CoGeBlast.</span><br>If you experience any difficulties
+        or prefer to use the old version, please <a id="beta_link" href="CoGeBlast_old.pl">click here</a>.
+        <br>
+    </div>
+  </tmpl_if>
+
+  <aside class="info">
+      <p><a class="bold" href="http://genomevolution.org/wiki/index.php/CoGeBlast" target="_blank">CoGeBlast</a> provides an interface to blast any genome within CoGe and view tabular and graphical results.
+            <span class="link" onClick="$(this).remove(); $('#getting_started').fadeIn();">More...</span>
+      </p>
+
+      <div id="getting_started" class="hidden" style="max-width:90%;">
+       Steps:
+       <ol>
+         <li>Paste-in query sequences
+         <li>Find and select any number of organisms and genomes to search against
+         <li>Configure the analysis parameters
+         <li>Click the <strong>Run CoGe BLAST</strong> button to start the analysis
+       </ol>
+
+       Results:
+       <ol>
+       <li>Visualize an overview of blast hits (High-scoring Sequence Pairs; HSP) in relationship to their genomic locations
+       <li>Interact with a sortable list of blast hits detailing
+          <ol>
+            <li>which query sequence matched which organism
+            <li>their genomic location
+            <li>query sequence coverage
+            <li>variety of blast hit metrics (length, e-value, score, percent ID, quality)
+            <li>find the closest genomic feature in the searched organisms
+          </ol>
+       <li>Visualize individual hits in their genomic context to determine the extent to which you query matched
+       <li>Get sequence, alignment and positional information for a given hit
+       <li>An overview of the number of times your query sequences matched a given organism
+       <li>Links to data files including
+         <ol>
+           <li>table of blast hits metrics and sequences
+           <li>fasta file of query Hit sequences
+           <li>fasta file of subject Hit sequences
+           <li>file of blast hit alignments
+           <li>raw blast reports for each organisms searched
+         </ol>
+       <li>Ability to select identified genomic regions and:
+           <ol>
+             <li>send to other tools within CoGe
+             <li>generate a FASTA file of nearby genomic features
+             <li>export results to a tab delimited file or Excel spreadsheet
+           </ol>
+        <ol>
+      </div>
+  </aside>
+
+  <div id="table_opts_dialog" class="dialog_box hidden" title="Table Information Options">
+    <table id="show_columns" class="small ui-widget-content ui-corner-all" style="padding:5px;">
+      <tr>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(1);" <TMPL_VAR NAME="QND">>Query Sequence Name</td>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(2);" <TMPL_VAR NAME="OrgD">>Organism Name</td>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(3);" <TMPL_VAR NAME="ChrD">>Chromosome</td>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(4);" <TMPL_VAR NAME="PosD">>Position</td>
+      </tr>
+      <tr>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(5);" <TMPL_VAR NAME="NumD">>HSP Number</td>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(6);" <TMPL_VAR NAME="LengthD">>HSP Length</td>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(7);" <TMPL_VAR NAME="QSCD">>Query Sequence Coverage</td>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(8);" <TMPL_VAR NAME="EvalD">>HSP E-value</td>
+      </tr>
+      <tr>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(9);" <TMPL_VAR NAME="PIDD">>HSP Percent Identity</td>
+          <td><input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(10);" <TMPL_VAR NAME="ScoreD">>HSP Score</td>
+          <td>
+              <input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(11);" <TMPL_VAR NAME="QualD">>HSP Quality (query coverage * percent ID)</td>
+          <td
+              ><input class="hsp_display" type='checkbox' onclick="toggle_hsp_column(12);" <TMPL_VAR NAME="FeatD">>Closest Genomic Feature</td>
+      </tr>
+      <tr>
+          <td
+              ><input class="hsp_display" type=checkbox onclick="toggle_hsp_column(13);"<TMPL_VAR NAME="DistD">>Distance to Closest Feature</td>
+          <td
+              ><input class="hsp_display" type=checkbox onclick="toggle_hsp_column(14);"<TMPL_VAR NAME="SeqViewD">>Link to SeqView for HSP Sequence</td>
+      </tr>
+      <TMPL_IF NAME="SAVE_DISPLAY">
+      </TMPL_IF> <!-- SAVE_DISPLAY -->
+    </table> <!-- show_columns -->
+    <div class="padded r ">
+        <span class='ui-button ui-corner-all coge-button' onclick="save_display_settings()">Save Display Settings</span>
+    </div>
+  </div> <!-- table_opts_dialog -->
+
+  <div id="big_picture" title="Enlarged Image of HSP Hits" class="dialog_box hidden"></div>
+
+  <div id="sequence_popup" class="dialog_box hidden" title="Sequence Information"></div>
+
+  <div id="feature_info_popup" class="dialog_box hidden" title="Feature Information">
+    <span class="loading">Loading...</span>
+  </div>
+
+  <div id='result_visual_popup' class="dialog_box hidden" title="HSP Information">
+    <div id="query_image" class="hsp_image"></div>
+    <div id="subject_image" class="hsp_image"></div>
+    <div id="image_info">
+      <TMPL_VAR NAME="HSP">
+    </div>
+  </div>
+
+  <div id='tabs' class="hidden" style='margin-top: 0.5em; display: inline-block;'>
+    <ul>
+      <li class='small'><a href="#tab-1">CoGe Blast</a></li>
+      <li class='small'><a href="#tab-2">NCBI Blast</a></li>
+    </ul>
+    <div id="tab-1">
+      <TMPL_INCLUDE NAME='CoGeBlast_coge.tmpl'>
+    </div>
+    <div id="tab-2">
+      <TMPL_INCLUDE NAME='CoGeBlast_ncbi.tmpl'>
+    </div>
+
+    <div style="padding: 0 1.4em 1em; box-sizing: border-box;">
+        <div class="bold text">Query Sequence(s)</div>
+        <textarea id="seq_box" name="seq_box" style='width: 100%; color:gray;' class="ui-corner-all ui-widget-content coge-section" spellcheck='false' wrap="off" cols="80"
+        placeholder="<TMPL_VAR NAME="SEQUENCE">" rows="15"></textarea>
+    </div>
+  </div> <!-- tabs -->
+    <div class="padded" style='margin-top:0.75em;'>
+        <span id="run_blast" class='ui-button ui-button-go ui-corner-all coge-button-lg'>Run CoGe BLAST</span>
+    </div>
+
+    <tmpl_include name="/widgets/Overlay.tmpl">
+
+    <div id="status_dialog" class="dialog_box hidden">
+        <div class="dialog-text small ui-widget-content ui-corner-all inline" style="overflow-y:auto;width:450px;height:200px;color:dimgray;padding: 5px;">
+        </div>
+
+        <ul class="dialog-error horizontal padded hidden">
+            <li id="error_msg">An error occurred <img src="picts/thumbs_down.png"></li>
+            <li class="dialog-log small"></li>
+            <li id="cancel_button" class="ui-button ui-corner-all ui-button-go r coge-button">
+                <span onClick="$('#status_dialog').dialog('close');" >
+                    Close
+                </span>
+            </li>
+        </ul>
+
+        <ul class="dialog-complete horizontal padded hidden">
+            <li>
+                <span>Finished!</span>
+                <img src="picts/thumbs_up.png">
+            </li>
+            <li id="ok_button" class="ui-button ui-corner-all r coge-button">
+                <span onClick="$('#status_dialog').dialog('close');" >
+                    OK
+                </span>
+            </li>
+        </ul>
+
+        <ul class="dialog-running padded">
+            <li class="bottom">
+                <span id="loading_msg">Please wait ...</span>
+                <img src="picts/ajax-loader.gif"/>
+            </li>
+        </ul>
+        <div class="dialog-link link small" style="color:dimgray; padding-left: 5px;"></div>
+    </div>
+
+    <script type="text/javascript" src="js/coge/utils.js"></script>
+    <script type="text/javascript" src="js/pages/blast.js"></script>
+    <script type="text/javascript" src="./js/jquery.tablesorter.2.0.3.js"></script>
+    <script>
+    $(function() {
+        $.ajaxSetup({
+            type: "GET",
+            url: '<TMPL_VAR NAME="PAGE_NAME">',
+            dataType: "html",
+            cache: false,
+        });
+
+        pageObj = {
+            waittime: 1000,
+            locations: "<TMPL_VAR NAME=LOCATIONS>",
+            gstid: "<TMPL_VAR NAME=GSTID>",
+            fid: "<TMPL_VAR NAME=FEATID>",
+            tempdir: "<TMPL_VAR NAME=TEMPDIR>",
+            seqview: "<TMPL_VAR NAME=SEQVIEW>" || 0
+        };
+
+        $(".dialog_box").dialog({ autoOpen: false, width: 500 });
+
+        <TMPL_VAR NAME="document_ready">
+
+        // Initialize CoGe Blast
+        $("#run_blast").click(run_coge_blast);
+        if (+"<tmpl_var name=RUN>") {
+            run_coge_blast();
+        }
+
+        //Object Generation
+        if(+pageObj.seqview){
+            var featid = "<TMPL_VAR NAME=FEATID>";
+            if ((featid) && (featid!=0)){
+                seqObj = new generate_seq_obj(<TMPL_VAR NAME=DSID>,0, <TMPL_VAR NAME=UPSTREAM>,<TMPL_VAR NAME=DOWNSTREAM>, pageObj.seqview,'<TMPL_VAR NAME=CHR>',<TMPL_VAR NAME=RC>,featid);
+            }
+            else{
+                seqObj = new generate_seq_obj(<TMPL_VAR NAME=DSID>,<TMPL_VAR NAME=DSGID>,<TMPL_VAR NAME=UPSTREAM>,<TMPL_VAR NAME=DOWNSTREAM>, pageObj.seqview,'<TMPL_VAR NAME=CHR>',<TMPL_VAR NAME=RC>);
+            }
+        }
+
+        //TODO - handle js object error when checking for value when it hasn't been instantiated
+        else{
+            seqObj = new Object();
+        }
+
+        var initialized = false;
+
+        $("#tabs").tabs({
+            show: function(event, ui) {
+                var button = $("#run_blast");
+                switch(ui.index) {
+                    case 0:
+                        adjust_blast_types();
+                        button.unbind().click(run_coge_blast).html("Run CoGe BLAST");
+
+                        if (!initialized) {
+                            var queryParams = getParamsFromUrl();
+
+                            var analysis = new Blast("#coge-params", {
+                                type: queryParams['type'],
+                                color: queryParams['color_hsps'],
+                                match_score: queryParams['match_score'],
+                                matrix_score: queryParams['matrix'],
+                                evalue: queryParams['expect'],
+                                wordsize: queryParams['wordsize'],
+                                limit: queryParams['resultslimit'],
+                                gapcost: queryParams['gapcost'],
+                                filtered: queryParams['filter_query'],
+                                composition: queryParams['comp'],
+                                blastz_wordsize: queryParams['zwordsize'],
+                                blastz_gap_start: queryParams['zgap_start'],
+                                blastz_gap_extension: queryParams['zgap_exten'],
+                                blastz_chaining: queryParams['zchaining'],
+                                blastz_threshold: queryParams['zthreshold'],
+                                blastz_mask: queryParams['zmask'],
+                                program: queryParams['program']
+                            });
+
+                            analysis.update_display();
+                            initialized = true;
+                        }
+                        break;
+                    case 1:
+                        adjust_blast_types(1);
+                        blast_param_on_select('ncbi_radio','ncbi');
+                        button.unbind().click(function() {
+                            select_blast();
+                            ga('send', 'event', 'cogeblast', 'run', 'ncbi');
+                        }).html("Run NCBI Blast");
+
+                        if (!initialized) {
+                            var queryParams = getParamsFromUrl();
+
+                            var analysis = new Ncbi("#ncbi-params", {
+                                type: queryParams['type'],
+                                match_score: queryParams['match_score'],
+                                matrix_score: queryParams['matrix'],
+                                evalue: queryParams['expect'],
+                                wordsize: queryParams['word_size'],
+                                limit: queryParams['resultslimit'],
+                                gapcost: queryParams['gapcost'],
+                                filter: queryParams['filter'],
+                                composition: queryParams['comp'],
+                                database: queryParams['database'],
+                                job: queryParams['job'],
+                                program: queryParams['program']
+                            });
+
+                            analysis.update_display();
+                            initialized = true;
+                        }
+                        break;
+                }
+            }
+        }).show();
+
+
+        // sequence fetching
+        get_seq('coge_radio');
+    });
+    </script>
+</TMPL_IF> <!-- MAIN -->
+
+<TMPL_IF NAME="BLAST_NU">
+  <th align="left" valign="top">
+    <div class="bold text">Nucleotide Specific Parameters</div>
+    <TABLE class="ui-corner-all ui-widget-content small">
+      <TR>
+        <TD valign="top">Match/Mismatch Scores:</TD>
+        <TD>
+          <select id="match_score" name="match_score" onchange="update_gapcost()">
+            <option selected="selected" value="1,-2">1,-2</option>
+            <option value="1,-3">1,-3</option>
+            <option value="1,-4">1,-4</option>
+            <option value="2,-3">2,-3</option>
+            <option value="4,-5">4,-5</option>
+            <option value="1,-1">1,-1</option>
+          </select>
+        </TD>
+      </TR>
+    </TABLE>
+  </th>
+</TMPL_IF> <!-- BLAST_NU -->
+
+<TMPL_IF NAME="BLAST_PRO">
+  <TH align="left" valign="top">
+    <div class="bold text">Protein Specific Parameters</div>
+    <TABLE class="ui-corner-all ui-widget-content small">
+      <TR>
+        <TD valign="top">Matrix:</TD>
+        <TD>
+          <select name="matrix" id="matrix" onChange="update_gapcost(1)">
+            <option value="PAM30">PAM30</option>
+            <option value="PAM70">PAM70</option>
+            <option value="BLOSUM80">BLOSUM80</option>
+            <option value="BLOSUM62" selected>BLOSUM62</option>
+            <option value="BLOSUM45">BLOSUM45</option>
+          </select>
+          <span onclick="matrix_view();" class="link small" style="padding-left:7px;">View Matrix</span>
+        </TD>
+      </TR>
+      <TMPL_IF NAME="BLAST_PRO_COMP">
+      <TR>
+        <TD>Compositional adjustments:</TD>
+        <TD>
+          <select name="comp_adj" id="comp_adj">
+            <option value="0">No adjustment</option>
+            <option value="1" selected>Composition-based statistics</option>
+            <option value="2">Conditional compositional score matrix adjustment</option>
+            <option value="3">Universal compositional score matrix adjustment</option>
+          </select>
+        </TD>
+      </TR>
+      </TMPL_IF> <!-- BLAST_PRO_COMP -->
+    </TABLE>
+  </TH>
+</TMPL_IF> <!-- BLAST_PRO -->
+
+<TMPL_IF NAME="NCBI_BLAST_NU">
+  <TH align="left" valign="top">
+    <div class="bold text">Nucleotide Specific Parameters</div>
+    <TABLE class='ui-widget-content ui-corner-all small'>
+      <TR>
+        <TD valign="top">Match/Mismatch Scores:</TD>
+        <TD>
+          <select id="match_score" name="match_score" onchange="update_gapcost_ncbi()">
+            <option selected="selected" value="1,-2">1,-2</option>
+            <option value="1,-3">1,-3</option>
+            <option value="1,-4">1,-4</option>
+            <option value="2,-3">2,-3</option>
+            <option value="4,-5">4,-5</option>
+            <option value="1,-1">1,-1</option>
+          </select>
+        </TD>
+      </TR>
+    </TABLE>
+  </TH>
+</TMPL_IF> <!-- CBI_BLAST_NU -->
+
+<TMPL_IF NAME="NCBI_BLAST_PRO">
+  <TH align="left" valign="top">
+    <div class="bold text">Protein Specific Parameters</div>
+    <TABLE class='ui-widget-content ui-corner-all small'>
+      <TR>
+        <TD valign="top">Matrix</TD>
+        <TD>
+          <select name="matrix" id="matrix" onChange="update_gapcost_ncbi(1)">
+            <option value="PAM30">PAM30</option>
+            <option value="PAM70">PAM70</option>
+            <option value="BLOSUM80">BLOSUM80</option>
+            <option value="BLOSUM62" selected>BLOSUM62</option>
+            <option value="BLOSUM45">BLOSUM45</option>
+          </select>
+        </TD>
+      </TR>
+      <TMPL_IF NAME=NCBI_BLAST_PRO_COMP>
+      <TR>
+        <TD>Compositional adjustments</TD>
+        <TD>
+          <select name=comp_adj id=comp_adj>
+            <option value="0">No adjustment</option>
+            <option value="1" selected>Composition-based statistics</option>
+            <option value="2">Conditional compositional score matrix adjustment</option>
+            <option value="3">Universal compositional score matrix adjustment</option>
+          </select>
+        </td>
+      </TR>
+      </TMPL_IF> <!-- NCBI_BLAST_PRO_COMP -->
+    </TABLE>
+  </TH>
+</TMPL_IF> <!-- NCBI_BLAST_PRO -->
+
+<TMPL_IF NAME="NU_DB">
+  <select name="db" id="db">
+    <optgroup label="Genomic plus Transcript">
+      <option value="Test/gpipe/9606/allcontig_and_rna">Human genomic plus transcript</option>
+      <option value="Test/gpipe/10090/allcontig_and_rna">Mouse genomic plus transcript</option>
+    </optgroup>
+    <optgroup label="Other Databases">
+      <option value="nr" selected>Nucleotide collection (nr/nt)</option>
+      <option value="refseq_rna">Reference mRNA sequences (refseq_rna)</option>
+      <option value="refseq_genomic">Reference genomic sequences (refseq_genomic)</option>
+      <option value="est">Expressed sequence tags (est)</option>
+      <option value="est_others">Non-human, non-mouse ESTs (est_others)</option>
+      <option value="gss">Genomic survey sequences (gss)</option>
+      <option value="htgs">High throughput genomic sequences (HTGS)</option>
+      <option value="pat">Patent sequences (pat)</option>
+      <option value="pdb">Protein Data Bank (pdb)</option>
+      <option value="alu">Human ALU repeat elements (alu_repeat)</option>
+      <option value="dbsts">Sequence tagged sites (dbsts)</option>
+      <option value="wgs">Whole-genome shotgun reads (wgs)</option>
+      <option value="env_nt">Environmental samples (env_nt)</option>
+    </optgroup>
+  </select>
+</TMPL_IF> <!-- NU_DB -->
+
+<TMPL_IF NAME="PRO_DB">
+  <select name="blast_db" id="db">
+    <option value="nr" selected>Non-redundant protein sequences (nr)</option>
+    <option value="refseq_protein">Reference proteins (refseq_protein)</option>
+    <option value="swissprot">Swissprot protein sequences(swissprot)</option>
+    <option value="pat">Patented protein sequences(pat)</option>
+    <option value="pdb">Protein Data Bank proteins(pdb)</option>
+    <option value="env_nr">Environmental samples(env_nr)</option>
+  </select>
+</TMPL_IF> <!-- PRO_DB -->
+
+<TMPL_IF NAME="T_DB">
+  <select name="blast_db" id="db">
+    <option value="nr" selected>Nucleotide collection (nr/nt)</option>
+    <option value="refseq_rna">Reference mRNA sequences (refseq_rna)</option>
+    <option value="refseq_genomic">Reference genomic sequences (refseq_genomic)</option>
+    <option value="est">Expressed sequence tags (est)</option>
+    <option value="est_others">Non-human, non-mouse ESTs (est_others)</option>
+    <option value="gss">Genomic survey sequences (gss)</option>
+    <option value="htgs">High throughput genomic sequences (HTGS)</option>
+    <option value="pat">Patent sequences(pat)</option>
+    <option value="pdb">Protein Data Bank (pdb)</option>
+    <option value="alu">Human ALU repeat elements (alu_repeats)</option>
+    <option value="dbsts">Sequence tagged sites (dbsts)</option>
+    <option value="wgs">Whole-genome shotgun reads (wgs)</option>
+    <option value="env_nt">Environmental samples (env_nt)</option>
+  </select>
+</TMPL_IF> <!-- T_DB -->
+
+<TMPL_IF NAME="RESULT_TABLE">
+  <div id="table_size">
+    <div id="null"><TMPL_VAR NAME="NULLIFY"></div>
+    <TMPL_IF NAME="HSP_TABLE">
+      <TABLE id="hsp_result_table" cellspacing="2" class="ui-widget-content ui-corner-all">
+        <!--<caption>HSPs w/o overlapping features:</caption>-->
+        <THEAD>
+          <TR nowrap align="middle">
+            <TH nowrap class="small"></TH>
+            <TH nowrap class="header">Query Seq</TH>
+            <TH nowrap class="header">Org</TH>
+            <TH nowrap class="header">Chr</TH>
+            <TH nowrap class="header">Position</TH>
+            <TH nowrap class="header">HSP#</TH>
+            <TH nowrap class="header">Length</TH>
+            <TH class="header">Coverage</TH>
+            <TH nowrap class="header">E-value</TH>
+            <TH nowrap class="header">Perc ID</TH>
+            <TH nowrap class="header">Score</TH>
+            <TH nowrap class="header">Quality</TH>
+            <TH class="header">Closest Genomic Feature </TH>
+            <TH class="header">Distance to Genomic Feature (bp) </TH>
+            <TH nowrap class="header">HSP Sequence </TH>
+            <TH style="display:none;">Location</TH>
+          </TR>
+        </THEAD>
+        <TBODY id="hsp_result_table_body" style="overflow-y: auto;overflow-x: hidden;">
+          <TMPL_LOOP NAME="HSPS">
+            <tr class="feat" id="<TMPL_VAR NAME=ID>">
+              <td align="right" id="checkbox<TMPL_VAR NAME=CHECKBOX>">
+                <input type="checkbox" id="<TMPL_VAR NAME=CHECKBOX>" value="<TMPL_VAR NAME=CHECKBOX>">
+              </td>
+              <td><TMPL_VAR NAME=QUERY_SEQ></td>
+              <td style="white-space:nowrap;"><TMPL_VAR NAME=HSP_ORG></td>
+              <td><TMPL_VAR NAME=HSP_CHR></td>
+              <td><TMPL_VAR NAME=HSP_POS_START></td>
+              <td><TMPL_VAR NAME=HSP></td>
+              <td><TMPL_VAR NAME=HSP_LENGTH></td>
+              <td><TMPL_VAR NAME=COVERAGE></td>
+              <td><TMPL_VAR NAME=HSP_EVAL></td>
+              <td><TMPL_VAR NAME=HSP_PID></td>
+              <td><TMPL_VAR NAME=HSP_SCORE></td>
+              <td><TMPL_VAR NAME=HSP_QUALITY></td>
+              <td style="white-space:nowrap;">
+                <div id="feat<TMPL_VAR NAME=ID>">
+                  <TMPL_VAR NAME=HSP_LINK>
+                </div>
+              </td>
+              <td>
+                <div id="dist<TMPL_VAR NAME=ID>">-</div>
+              </td>
+              <td><TMPL_VAR NAME=SEQVIEW></td>
+              <td class="location" style="display:none"><TMPL_VAR NAME=LOC_VAL></td>
+            </tr>
+          </TMPL_LOOP>
+        </tbody>
+      </table>
+    </TMPL_IF> <!-- HSP_TABLE -->
+  </div> <!-- table_size -->
+</TMPL_IF> <!-- RESULT_TABLE -->
+
+<TMPL_IF NAME="CHROMOSOMES_IF">
+  <table>
+    <TMPL_LOOP NAME="CHROMOSOME_LOOP">
+      <tr>
+        <Td>
+          <div <TMPL_VAR NAME="div_STYLE">>
+            <TMPL_VAR NAME="DB_NAME">
+              <TMPL_VAR NAME="ENLARGE">
+          </div>
+          <TMPL_VAR NAME="CHR_IMAGE">
+    </TMPL_LOOP>
+  </table>
+</TMPL_IF> <!-- CHROMOSOMES_IF -->
+
+<TMPL_IF NAME="CHROMOSOMES_LARGE_IF">
+  <TMPL_LOOP NAME="CHROMOSOME_LOOP_LARGE">
+    <div id=large_db<TMPL_VAR NAME=IMAGE_ID_LARGE> style="display:none">
+      <TMPL_VAR NAME="DB_NAME_LARGE">
+    </div>
+    <div id=large_pic<TMPL_VAR NAME=IMAGE_ID_LARGE> style="display:none">
+      <TMPL_VAR NAME="CHR_IMAGE_LARGE">
+    </div>
+  </TMPL_LOOP>
+</TMPL_IF> <!-- CHROMOSOMES_LARGE_IF -->
+
+<TMPL_IF NAME="HSP_IF">
+  <span class="species">HSP Number <TMPL_VAR NAME="HSP_NUM"> Information:</span>
+  <br>
+  <TABLE id="hsp_table" class="ui-widget-content ui-corner-all" style="width: 400px; overflow: auto;" cellspacing="2">
+    <tr>
+      <td valign="top">
+        <table>
+          <THEAD>
+            <TR>
+              <TH></TH>
+              <TH class="header">Query</TH>
+              <TH class="header">Subject</TH>
+            </TR>
+          </THEAD>
+          <TBODY style="font-size: 10pt;">
+            <TMPL_LOOP NAME=HSP_QS>
+              <!--onmouseover="$('#table_row<TMPL_VAR NAME=FID>').addClass('highlight_tablerows');" onmouseout="$('#table_row<TMPL_VAR NAME=FID>').removeClass('highlight_tablerows');"-->
+              <tr>
+                <TD>Perc ID</TD>
+                <TD><TMPL_VAR NAME=HSP_PID_QUERY></TD>
+                <TD><TMPL_VAR NAME=HSP_PID_SUB></TD>
+              </tr>
+              <tr>
+                <TD>Perc Sim</TD>
+                <TD><TMPL_VAR NAME=HSP_PSIM_QUERY></TD>
+                <TD><TMPL_VAR NAME=HSP_PSIM_SUB></TD>
+              </tr>
+              <tr>
+                <TD>Match</TD>
+                <TD><TMPL_VAR NAME=HSP_MATCH_QUERY></TD>
+                <TD><TMPL_VAR NAME=HSP_MATCH_SUB></TD>
+              </tr>
+              <tr>
+                <TD>Mismatch</TD>
+                <TD><TMPL_VAR NAME=HSP_MISMATCH_QUERY></TD>
+                <TD><TMPL_VAR NAME=HSP_MISMATCH_SUB></TD>
+              </tr>
+              <tr>
+                <TD>Gap</TD>
+                <TD><TMPL_VAR NAME=HSP_GAP_QUERY></TD>
+                <TD><TMPL_VAR NAME=HSP_GAP_SUB></TD>
+              </tr>
+              <tr>
+                <TD>Position</TD>
+                <TD><TMPL_VAR NAME=HSP_POSITION_QUERY></TD>
+                <TD><TMPL_VAR NAME=HSP_POSITION_SUB></TD>
+              </tr>
+              <tr>
+          </TBODY>
+          </TMPL_LOOP>
+        </table>
+      </TD>
+      <TD valign="top">
+        <table>
+          <THEAD>
+            <TR>
+              <TH></TH>
+              <TH class="header">HSP</TH>
+            </TR>
+          </THEAD>
+          <TMPL_LOOP NAME=HSP_HSP>
+            <TBODY style="font-size: 10pt;">
+              <tr>
+                <TD>E-Value</TD>
+                <TD><TMPL_VAR NAME=HSP_EVAL></TD>
+              </tr>
+              <tr>
+                <TD>Score</TD>
+                <TD><TMPL_VAR NAME=HSP_SCORE></TD>
+              </tr>
+              <tr>
+                <TD>Strand</TD>
+                <TD><TMPL_VAR NAME=HSP_STRAND></TD>
+              </tr>
+              <tr>
+                <TD>Length</TD>
+                <TD><TMPL_VAR NAME=HSP_LENGTH></TD>
+              </tr>
+              <tr>
+                <TD>Chromosome</TD>
+                <TD><TMPL_VAR NAME=HSP_CHR></TD>
+              </tr>
+            </TBODY>
+          </TMPL_LOOP>
+        </table>
+    </TR>
+  </TABLE>
+  <br>
+  <table width="100%">
+    <tr>
+      <td><TMPL_VAR NAME="QUERY_SEQ"></td>
+      <td><TMPL_VAR NAME="SUB_SEQ"></td>
+      <td><TMPL_VAR NAME="ALIGNMENT"></td>
+    </tr>
+  </table>
+  <TMPL VAR NAME="HSP_EXCEL_LINK">
+</TMPL_IF>
+
+<TMPL_IF NAME="BLAST_RESULTS">
+    <div class="ui-widgt-content ui-corner-all">
+        <div class="r">
+            <span class="bold text">HSP Count </span>
+            <span class="small link" onclick="toggle_display(this, 'hsp_count_data');">hide</span>
+            <div id="hsp_count_data">
+                <TMPL_VAR NAME="HSP_COUNT">
+            </div>
+        </div>
+
+        <div class="l">
+            <div>
+                <span id="genomic_title" class="bold text">Genomic HSP Visualization </span>
+                <span class='small link' style="font-weight:normal;padding-right:15px;" onClick="toggle_display(this, 'left_column');">hide</span>
+            </div>
+            <div>
+                <div id="left_column">
+                    <div id="chromosomes" class="ui-widget-content ui-corner-all" style="width: 405px;overflow: auto;max-height: 700px;">
+                    <TMPL_VAR NAME="CHROMOSOMES">
+                    <TMPL_VAR NAME="CHR_LARGE">
+                    <div class="small">
+                        <span class="link" onclick="window.open('<TMPL_VAR NAME=GENOMELIST_LINK>')">Generate List of Matching Genomes
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="l" style="clear:both;">
+        <br><br>
+        <div id="result_toggle">
+        <span class="bold text">HSP Table </span>
+        <span class='small link' style="font-weight:normal;padding-right:15px;" onClick="toggle_display(this, 'result_features');">hide</span>
+        </div>
+            <div id="result_features" align="left" valign="top">
+
+            <TMPL_VAR NAME="HSP_RESULTS">
+
+            <div class="small padded">
+                <span href="javascript:void(0)" id="table_opts" class='r ui-button ui-button-icon-left ui-corner-all coge-button coge-button-left'>
+                    <span class="ui-icon ui-icon-newwin"></span>Change Viewable Columns
+                </span>
+                <span class='ui-button ui-button-icon-left ui-corner-all coge-button coge-button-left' onClick="$('#hsp_result_table :checkbox').attr('checked', true);"><span class="ui-icon ui-icon-check"></span>Select All</span>
+                <span class='ui-button ui-button-icon-left ui-corner-all coge-button coge-button-left' onClick="$('#hsp_result_table :checkbox').attr('checked', false);"><span class="ui-icon ui-icon-minusthick"></span>Select None</span>
+                <span class='small' style="margin-left:2em;">Send selected to:</span>
+                <select name="overlap_action" id="overlap_action">
+                    <option value="gevo">GEvo</option>
+                    <option value="fasta">Fasta View</option>
+                    <option value="seqview">Sequence View</option>
+                    <option value="xls">Excel File</option>
+                    <option value="tab">Tab Delimited FIle</option>
+                    <option value="tophits">Top Hits File</option>
+                    <option value="list">Feature List</option>
+                    <option value="blast">CoGeBlast</option>
+                    <option value="phylo">Phylogenetics</option>
+                    <option value="CodeOn">Coding Evolution</option>
+                </select>
+                <span class='ui-button ui-corner-all coge-button' onClick="overlap_checkboxes();">Go</span>
+            </div>
+        </div>
+    </div>
+
+    <div style="clear:both;">
+        <br><br>
+        <span class="bold text">Download</span>
+        <TMPL_VAR NAME="DATA_FILES">
+    </div>
+    <p>
+        Regenerate this analysis:
+        <a href="<TMPL_VAR NAME=LINK>">
+            <TMPL_VAR NAME="LINK">
+        </a>
+    </p>
+</div>
+<hr>
+</TMPL_IF>
+

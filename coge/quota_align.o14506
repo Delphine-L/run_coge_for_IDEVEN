@@ -1,0 +1,18 @@
+Base class package "Class::C3::Componentised" is empty.
+    (Perhaps you need to 'use' the module which defines that package first,
+    or make that module available in @INC (@INC contains: /homedir/lariviere/tool/coge/lib/share/perl5/ /homedir/lariviere/perl5/lib/perl5/x86_64-linux-thread-multi /homedir/lariviere/perl5/lib/perl5 /usr/local/lib64/perl5 /usr/local/share/perl5 /usr/lib64/perl5/vendor_perl /usr/share/perl5/vendor_perl /usr/lib64/perl5 /usr/share/perl5 .).
+ at /homedir/lariviere/perl5/lib/perl5/DBIx/Class/Componentised.pm line 7.
+BEGIN failed--compilation aborted at /homedir/lariviere/perl5/lib/perl5/DBIx/Class/Componentised.pm line 7.
+Compilation failed in require at (eval 14) line 3.
+	...propagated at /usr/share/perl5/base.pm line 94.
+BEGIN failed--compilation aborted at /homedir/lariviere/perl5/lib/perl5/DBIx/Class.pm line 23.
+Compilation failed in require at (eval 9) line 3.
+	...propagated at /usr/share/perl5/base.pm line 94.
+BEGIN failed--compilation aborted at /homedir/lariviere/perl5/lib/perl5/DBIx/Class/Schema.pm line 6.
+Compilation failed in require at (eval 8) line 3.
+	...propagated at /usr/share/perl5/base.pm line 94.
+BEGIN failed--compilation aborted at /homedir/lariviere/tool/coge/lib/share/perl5//CoGeX.pm line 9.
+Compilation failed in require at /homedir/lariviere/tool/coge/lib/share/perl5//CoGe/Accessory/Web.pm line 9.
+BEGIN failed--compilation aborted at /homedir/lariviere/tool/coge/lib/share/perl5//CoGe/Accessory/Web.pm line 9.
+Compilation failed in require at /home/lariviere/tool/coge/web/bin/SynMap/quota_align_coverage.pl line 7.
+BEGIN failed--compilation aborted at /home/lariviere/tool/coge/web/bin/SynMap/quota_align_coverage.pl line 7.

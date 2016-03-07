@@ -1,0 +1,281 @@
+<script type="text/javascript" src="js/coge/utils.js"></script>
+<script type="text/javascript" src="./js/sswap.js"></script>
+<script type="text/javascript">
+$(document).ready(function(){
+	// Show indicator if not on main site
+	if (document.URL.indexOf('genomevolution.org') == -1) {
+		$('#genfam').show();
+	}
+
+	prot = <TMPL_VAR NAME=PROT>;
+    pageObj.prot=prot;
+    if (prot) {
+		$('#prot_button').hide();
+		$('#dna_text_button').hide();
+		$('.prot_option').show();
+		$('.dna_option').hide();
+    }
+    else {
+		$('#prot_text_button').hide();
+		$('#dna_button').hide();
+		$('.prot_option').hide();
+		$('.dna_option').show();
+	}
+});
+
+function update_seqs(prot, text)
+ {
+  $('#seq_text').val("loading . . .");
+  var name_only = 0;
+  if ($('#name_only')[0].checked) {name_only = 1};
+  var id_only = 0;
+  if ($('#id_only')[0].checked) {id_only = 1};
+  var upstream = 0;
+  var downstream =0;
+  if ($('#upstream').val()) {upstream=$('#upstream').val()};
+  if ($('#downstream').val()) {downstream=$('#downstream').val()};
+  pageObj.prot=prot;
+  if (prot)
+   {
+    if (text)
+     {
+       var url=window.location+";prot=1;text=1;no="+name_only+";io="+id_only;
+       window.location =url;
+     }
+    get_seqs(['args__fids','fids', 'args__textbox','args__1','args__prot','args__1','args__name_only','args__'+name_only, 'args__id_only','args__'+id_only, 'args__gstid','gstid'],['seq', 'seq_count', 'feat_count', 'warning']);
+    $('#prot_button').hide();
+    $('#prot_text_button').show();
+    $('#dna_button').show();
+    $('#add_seq').hide();
+    $('#dna_text_button').hide();
+    $('.prot_option').show();
+   }
+  else
+   {
+    if (text)
+     {
+       var url=window.location+";text=1;no="+name_only+";io="+id_only+";up="+upstream+";down="+downstream;
+       window.location =url;
+     }
+ get_seqs(['args__fids','fids', 'args__textbox','args__1','args__prot','args__0','args__name_only','args__'+name_only, 'args__id_only','args__'+id_only, 'args__gstid','gstid', 'args__upstream','args__'+upstream, 'args__downstream','args__'+downstream],['seq', 'seq_count', 'feat_count', 'warning']);
+    $('#prot_button').show();
+    $('#prot_text_button').hide();
+    $('#dna_button').hide();
+    $('#add_seq').show();
+    $('#dna_text_button').show();
+    $('.prot_option').hide();
+   }
+ }
+
+function gen_url() {
+  var name_only = 0;
+  if ($('#name_only')[0].checked) {name_only = 1};
+  var id_only = 0;
+  if ($('#id_only')[0].checked) {id_only = 1};
+
+gen_file(['args__fids','fids', 'args__prot','args__'+pageObj.prot,'args__name_only','args__'+name_only, 'args__id_only','args__'+id_only, 'args__gstid','gstid'],[post_to_SSWAP]);
+}
+
+function post_to_SSWAP(url) {
+
+// var myseq = $('#seq_text').val();
+ var jsonRRG= {
+    "api" : "/makeRRG",
+    "prefix": {
+        "util" : "http://sswapmeet.sswap.info/util/",
+        "mime" : "http://sswapmeet.sswap.info/mime/",
+        "data" : "http://sswapmeet.sswap.info/data/",
+        "coge" : "http://genomevolution.org/CoGe/SSWAP/"
+    },
+  "coge:resources/FastaView/FastaView" : { },
+  "mapping" : { "util:WebPage" : url },
+  "definitions" : {}
+ };
+var tmp = {};
+tmp[url] = {"rdf:type": "mime:text/X-multiFasta"};
+jsonRRG["definitions"] = tmp;
+
+//to modify to use a URL to fetch data, put the URL in where ever there is "_:object" -> "http://thingie"
+
+var jsonString = JSON.stringify(jsonRRG);
+
+var url = "http://sswap.iplantcollaborative.org/ipc/create-pipeline-with-rrg";
+ var myForm = document.createElement("FORM");
+ myForm.method="post" ;
+ myForm.action=url;
+ myForm.setAttribute("target", "_blank");
+ var myInput = document.createElement("textarea");
+ myInput.name="rrg";
+ myInput.value=jsonString;
+ myForm.appendChild(myInput);
+ document.body.appendChild(myForm);
+ myForm.submit();
+ document.body.removeChild(myForm);
+}
+
+function post_to_genfam() {
+	// TODO: get json via ajax class instead of always inserting it into fasta_json div
+
+	var form = $("<form></form>");
+    form.attr("method", "post");
+    form.attr("action", "<tmpl_var name=genfam>");
+    form.attr("target", "_blank");
+    form.append($("#fasta_json").clone());
+
+    $(document.body).append(form);
+    form.submit();
+    $(document.body).remove(form);
+}
+
+function post_to_target () {
+ seq = $('#seq_text').val().replace(/\n/g,":::");
+// seq = escape(seq);
+ var url;
+ if (pageObj.prot) {url="http://target.iplantcollaborative.org/v3.3_TATE_protein_CoGe_start.php"}
+ else {url = "http://target.iplantcollaborative.org/v3.3_TATE_dna_CoGe_start.php";}
+ var myForm = document.createElement("form");
+ myForm.method="post" ;
+ myForm.action=url;
+ myForm.setAttribute("target", "_blank");
+ var myInput = document.createElement("input");
+ myInput.setAttribute("name", "coge_query");
+ myInput.setAttribute("value",seq);
+ myForm.appendChild(myInput);
+ document.body.appendChild(myForm);
+ myForm.submit();
+ document.body.removeChild(myForm);
+}
+
+function post_to_prosite () {
+ var seq = $('#seq_text').val();
+ seq = seq.replace(/\*/g,"");
+ var url = "http://prosite.expasy.org/cgi-bin/prosite/PSScan.cgi";
+ var myForm = document.createElement("FORM");
+ myForm.method="post" ;
+ myForm.action=url;
+ myForm.setAttribute("name", "theForm");
+ myForm.setAttribute("target", "_blank");
+ var myInput = document.createElement("textarea");
+ myInput.name="seq";
+ myInput.value=seq;
+ myForm.appendChild(myInput);
+ document.body.appendChild(myForm);
+ myForm.submit();
+ document.body.removeChild(myForm);
+}
+
+function post_to_phylogeny_fr () {
+ var seq = $('#seq_text').val();
+ seq = seq.replace(/\*/g,"");
+ //var url = "http://www.phylogeny.fr/version2_cgi/simple_phylogeny.cgi"; // mdb removed 2/18/15 COGE-584
+ var url = "http://phylogeny.lirmm.fr/phylo_cgi/simple_phylogeny.cgi"; // mdb added 2/18/15 COGE-584
+ var myForm = document.createElement("FORM");
+ myForm.method="post" ;
+ myForm.action=url;
+ myForm.setAttribute("target", "_blank");
+ var myInput = document.createElement("textarea");
+ myInput.name="task_data_input";
+ myInput.value=seq;
+ myForm.appendChild(myInput);
+ document.body.appendChild(myForm);
+ myForm.submit();
+ document.body.removeChild(myForm);
+
+}
+
+function post_to_mafft() {
+    var MAFFT_URL = "http://mafft.cbrc.jp/alignment/server/cgi-bin/mafft5.cgi",
+        seq = $('#seq_text').val();
+
+    coge.utils.post(MAFFT_URL, {
+        senddata: seq.replace(/\*/g,""),
+        outorder: "aligned",
+        strategy: "auto",
+        "case": "casedefault",
+        scorematrix: "bl 62",
+        scorematrixnuc: "kimura 200",
+        op: "1.53",
+        ep: "0.0",
+        unalignlevel: "0",
+        direction: "inputdirection",
+        gapscore: "newscore",
+        "mafftE_n": "50",
+        "mafftE_e": "1e-10",
+        referenceseq: "top",
+        harrplot: "plotandalignment",
+        harrplotscorethreshold: "39"
+    });
+}
+
+</script>
+
+<TABLE>
+ <tr class=small>
+  <td>Sequence Count: <span id=seq_count><TMPL_VAR NAME=SEQ_COUNT></span>&nbsp&nbsp
+      Feature Count: <span id=feat_count><TMPL_VAR NAME=FEAT_COUNT></span>&nbsp&nbsp
+      <span class = alert id=warning><TMPL_VAR NAME=WARNING></span>
+
+ <TR>
+  <TD><div id=seq>
+   <TMPL_VAR NAME="SEQ">
+   </div>
+</TABLE>
+<TMPL_VAR NAME="FIDS">
+
+<TMPL_IF NAME=BOTTOM_BUTTONS>
+  <DIV id="dynamic_button">
+  <TABLE>
+   <TR>
+   <td><span class='ui-button ui-corner-all'id="prot_button" onclick="update_seqs(1)">Protein Sequence</span>
+   <td><span class='ui-button ui-corner-all'id="dna_button" onclick="update_seqs(0)">DNA Sequence</span>
+   <td><span class='ui-button ui-corner-all'id="prot_text_button" onclick="update_seqs(1,1)">Download</span>
+   <td><span class='ui-button ui-corner-all'id="dna_text_button" onclick="update_seqs(0,1)"> Download</span>
+   <td><span class='ui-button ui-corner-all'id="blast_button"onclick="window.open('CoGeBlast.pl?featid='+$('#fids').val())">CoGe Blast</span>
+ </TR>
+  </TABLE>
+<span id=add_seq class=small>
+  Add Upstream (5'): <INPUT type="text" id="upstream" value= "<TMPL_VAR NAME="UP">" size=6>
+  Add Downstream (3'): <INPUT type="text" id="downstream" value="<TMPL_VAR NAME="DOWN">" size=6>
+  <span class='ui-button ui-corner-all'id="dna_text_button" onclick="update_seqs(0)">Add Seq</span>
+  </span><br>
+<span class=small>
+  <input type="checkbox" name="name_only" id="name_only" value=0 onclick="update_seqs(0);"/>Only use feature names in header.&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp
+  <input type="checkbox" name="id_only" id="id_only" value=0 onclick="update_seqs(0);"/>Only use CoGe feature id in header.
+</span>
+
+<br><br>
+
+  Off site tools:<br>
+<!-- ALL SEQUENCES -->
+    <table class="ui-widget-content ui-corner-all">
+    <tr align=top>
+    <td><span onClick="gen_url()" class='ui-button ui-corner-all'>iPlant Semantic Web</span>
+
+<div id="pipelineButton"></div>
+
+    <td> Send sequence(s) to the <a href = "http://sswap.info/wiki" target =_sswap>iPlant/SSWAP</a> semantic discovery service
+    <tr align=top>
+    <td><span onClick="post_to_target();" class='ui-button ui-corner-all'>TARGeT</span>
+    <td><span class="link" onclick ="window.open('http://target.iplantcollaborative.org/');"> Tree Analysis of Related Genes and Transposons</span><br>
+    <tr align=top>
+    <td><span onClick="post_to_phylogeny_fr();" class='ui-button ui-corner-all'>Phylogeny.fr</span>
+    <td>One click phylogeny at <a href="http://www.phylogeny.fr" target=_new>Phylogeny.fr</a><br>
+    <tr>
+    <td><span onclick="post_to_mafft();" class='ui-button ui-corner-all'>MATTF</span></td>
+    <td>Run <a href="http://mafft.cbrc.jp/alignment/server/index.html">MAFFT</a> on the sequence(s)</td>
+    <tr id="genfam" class="hidden">
+    <td><span onclick="post_to_genfam();" class='ui-button ui-corner-all'>Send to GenFam</span>
+    </table>
+<!-- PROTEIN SEQUENCES ONLY -->
+  <div class="prot_option">
+   <table>
+    <tr align=top>
+    <td><span onClick="post_to_prosite();" class='ui-button ui-corner-all'>ProSite</span>
+    <td>Scan for protein domains at <span class=link onclick="window.open('http://www.expasy.ch/prosite/')">ProSite</span>.
+  </table>
+   </div>
+ </DIV>
+
+<textarea id="fasta_json" name="fasta_json" class="hidden"><TMPL_VAR NAME=FASTA_JSON></textarea>
+
+</TMPL_IF>

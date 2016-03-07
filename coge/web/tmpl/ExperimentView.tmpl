@@ -1,0 +1,220 @@
+<TMPL_IF NAME="MAIN">
+<script src="./js/coge/utils.js"></script>
+<script src="./js/coge/services.js"></script>
+<script src="./js/coge/progress.js"></script>
+<script src="./js/pages/experiment-view.js"></script>
+<script type="text/javascript" src="./js/jquery.tablesorter.2.0.3.js"></script>
+<script type="text/javascript" src="./js/jquery.tablesorter.pager.js"></script>
+<script type="text/javascript" src="./js/jquery.fileupload.js"></script>
+<script type="text/javascript">
+
+const API_BASE_URL  = '<TMPL_VAR NAME="API_BASE_URL">';
+const STATUS_URL    = '<TMPL_VAR NAME="STATUS_URL">';
+const PAGE_NAME     = '<TMPL_VAR NAME="PAGE_NAME">';
+const SUPPORT_EMAIL = '<TMPL_VAR NAME="SUPPORT_EMAIL">';
+const USER_NAME     = '<TMPL_VAR NAME="USER_NAME">';
+const IRODS_HOME    = '<TMPL_VAR NAME=IRODS_HOME>';
+
+var EID = '<TMPL_VAR NAME="EID">';
+var JOB_ID = '<TMPL_VAR NAME="JOB_ID">';
+var newLoad = false;
+
+$(document).ready(function() {
+    pageObj = new Object();
+    pageObj.timers = new Array();
+
+    $.ajaxSetup({
+        type: "GET",
+        url: PAGE_NAME,
+        dataType: "html",
+        cache: false,
+    });
+
+    $(".dialog_box").dialog({autoOpen: 0, width: 450});
+
+    //$("#progress_dialog").dialog({modal: true});
+
+    $("#edit_tag_name").autocomplete({
+        source: function() { get_experiment_tags(); },
+        select: function(event, ui) { get_type_description( ui.item.label ); }
+    });
+
+    set_annotation_table();
+
+    init_annotation_dialog(EID, '<TMPL_VAR NAME="DEFAULT_TYPE">');
+
+    // Initialize CoGe packages
+    coge.services.init({
+    	baseUrl: API_BASE_URL,
+    	userName: USER_NAME
+    });
+    
+    coge.progress.init({
+    	supportEmail: SUPPORT_EMAIL,
+    	onReset: reset_location
+    });
+    
+    snpMenu.init();
+    
+    // Open status dialog
+    if (JOB_ID) {
+    	coge.progress.begin();
+    	coge.progress.update(JOB_ID);
+    }
+});
+</SCRIPT>
+
+<table>
+	<tr style="vertical-align:top">
+		<td>
+			<div>
+			    <div style="color:dimgray;font-weight:bold;">Info</div>
+			    <div id='experiment_info' class="inline">
+			        <TMPL_VAR NAME="EXPERIMENT_INFO">
+			    </div>
+			</div>
+		</td>
+		<td>
+			<div style="padding-left:10px; padding-bottom:10px;">
+			    <div style="color:dimgray;font-weight:bold;">Statistics</div>
+			    <div class="inline top">
+			        <ul class="ui-widget-content ui-corner-all" style="padding: 2px;">
+			            <li>
+			                <span class="title5">Rows:</span>
+			                <span class="data5"><TMPL_VAR NAME="rows"><span>
+			            </li>
+			        </ul>
+			    </div>
+			</div>
+			<div style="padding-left: 10px;">
+			    <div style="color:dimgray;font-weight:bold;">Tools</div>
+			    <div class="inline top">
+			    	<ul class="ui-widget-content ui-corner-all" style="padding: 2px;">
+			    		<li>
+			    			<span class="title5">Export data:</span>
+		            		<span class="data5 link" ondblclick="download_files();" onclick="download_files();">Download</span>
+		            		<TMPL_UNLESS NAME="PUBLIC">
+		            		|&nbsp;<span class="data5 link" ondblclick="export_data();" onclick="export_data();">iPlant Data Store</span>
+		            		</TMPL_UNLESS>
+		            	</li>
+		            	<TMPL_IF NAME="ALIGNMENT_TYPE">
+                    	<li>
+                    		<span class="title5">Analyze:</span>
+                    		<span class="data5 link" ondblclick="snpMenu.open();" onclick="snpMenu.open();">Identify SNPs</span>
+                    	</li>
+                    	</TMPL_IF>
+			        </ul>
+			    </div>
+		    </div>
+		</td>
+	</tr>
+</table>
+<br>
+
+<TMPL_IF NAME="EXPERIMENT_ANNOTATIONS">
+<div>
+ <div style="color:dimgray;font-weight:bold;">Metadata</div>
+ <div id="experiment_annotations">
+  <TMPL_VAR NAME="EXPERIMENT_ANNOTATIONS">
+ </div>
+</div>
+</TMPL_IF>
+
+<div id="experiment_info_edit_box" class="dialog_box hidden" title="Edit Experiment Info"></div>
+
+<div id="experiment_tag_edit_box" class="dialog_box hidden" title="Add Experiment Tag">
+  <table class="small">
+   <tr>
+    <td>Name:</td>
+    <td><input id="edit_tag_name" size="53" value=""></td>
+   </tr>
+   <tr valign="top">
+    <td>Description:</td>
+    <td><textarea id="edit_tag_description" rows="5" cols="50"></textarea></td>
+   </tr>
+  </table>
+  <span onClick="add_tag_to_experiment();" class='ui-button ui-corner-all coge-button'>Add</span>
+</div>
+
+<div id="find_snps_dialog" class="dialog_box hidden" title="Find SNPs">
+	<div class="info coge-padded-top">
+		Select a method for determining SNPs.
+	</div>
+	<br>
+	<table class="small">
+		<tr>
+			<td>Method: </td>
+			<td>
+				<select id="find_snps_method">
+				    <option value="coge" selected>CoGe SNP-finder</option>
+				    <option value="samtools">SAMtools</option>
+				    <option value="platypus">Platypus</option>
+				    <option value="gatk" disabled>GATK -- coming soon!</option>
+			    </select>
+			</td>
+		</tr>
+	</table>
+	<br><br>
+	<span onClick="find_snps();" class='ui-button ui-corner-all coge-button'>Identify SNPs</span>
+</div>
+
+<TMPL_INCLUDE NAME="widgets/Progress.tmpl">
+
+<TMPL_INCLUDE NAME='widgets/AddAnnotation.tmpl'>
+
+<TMPL_INCLUDE "widgets/pipeline-options.tmpl">
+
+</TMPL_IF> <!-- MAIN -->
+
+<TMPL_IF NAME="EDIT_EXPERIMENT_INFO">
+	<script>
+	$(function() {
+	    $("#edit_source").autocomplete({
+	        source:
+	            function() {
+	                get_sources();
+	            },
+	        select:
+	            function(event, ui) {
+	                $("#edit_source").val( ui.item.label );
+	                $("#edit_source_id").val( ui.item.value );
+	                return false;
+	            }
+	    });
+	});
+	</script>
+	<table class="small">
+	 <tr>
+	  <td>Name:</td>
+	  <td><input id="edit_name" type="textbox" size="53" value="<TMPL_VAR NAME='NAME'>"></td>
+	 </tr>
+	 <tr>
+	  <td>Description:</td>
+	  <td><textarea id="edit_desc" rows="5" cols="50"><TMPL_VAR NAME='DESC'></textarea></td>
+	 </tr>
+	 <tr>
+	  <td>Source:</td>
+	  <td>
+	   <input id="edit_source" size="53" value="<TMPL_VAR NAME='SOURCE'>">
+	   <input id="edit_source_id" type="hidden" value="<TMPL_VAR NAME='SOURCE_ID'>">
+	  </td>
+	 </tr>
+	 <tr>
+	  <td>Version:</td>
+	  <td><input id="edit_version" type="textbox" size="53" value="<TMPL_VAR NAME='VERSION'>"></td>
+	 </tr>
+	</table>
+	<br>
+	<span onClick="update_experiment_info();" class='ui-button ui-corner-all coge-button'>Update</span>
+</TMPL_IF>
+
+<TMPL_IF NAME='ADMIN_AREA'>
+	<br><br><hr>
+	<div class="bold text padded">Admin Functions</div>
+	<div class="small padded">
+		<span>Load Log:</span>
+	    <span id="log_button" onclick="toggle_load_log();" class='ui-button ui-corner-all coge-button' style="width:3em; margin-bottom:1em; overflow:auto;">Show</span>
+	    <img id="log_spinner" src="picts/ajax-loader.gif" style="opacity: 0;"/>
+	    <div id="log_contents" class="border hidden padded coge-code" style="border:1px solid gray; color: navy;"></div>
+	</div>
+</TMPL_IF>

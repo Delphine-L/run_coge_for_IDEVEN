@@ -1,0 +1,177 @@
+<script type="text/javascript" src="js/jquery.tablesorter.2.0.3.js"></script>
+<script type="text/javascript" src="js/pages/organism-view.js"></script>
+<script type="text/javascript">
+
+$(function() {
+    init({
+        oid:  "<TMPL_VAR NAME='ORGANISM_ID'>",
+        gid:  "<TMPL_VAR NAME='GENOME_ID'>",
+        dsid: "<TMPL_VAR NAME='DATASET_ID'>",
+        chr:  "<TMPL_VAR NAME='CHR_ID'>",
+        init_msg: "<TMPL_VAR NAME='NO_RESULTS'>"
+    });
+    
+    // a terrible kludge
+    if ( $('#chr_info').is(':empty') )
+    	$('#chr_info').parent().hide();
+});
+
+</script>
+
+<div class="row row-margin padded">
+    <div class="col-md-12">
+        <div class="small padded middle">
+            <input type="search" placeholder="Search" spellcheck="false" style="font-size:1.25em;" size="50" value="<TMPL_VAR NAME=ORG_SEARCH>" name="org_search" id="org_search" onkeyup='search_organisms("org_search");'>
+            <span class='ui-button ui-corner-all coge-button' onClick="search_organisms('org_search');">
+                <span class="ui-icon ui-icon-arrowrefresh-1-w"></span>
+            </span>
+            <img id="busy" src="picts/ajax-loader.gif" style="opacity:0;"/>
+        </div>
+    </div>
+</div>
+
+<div id='no_results' class="note" style='display:none;padding-left:1em;'></div>
+
+<div id='results' style="display:none;border-bottom:1px solid lightgray;">
+
+    <div class="row row-margin">
+        <div class="col-md-4">
+            <span class="coge-table-header">Organisms:</span>
+            <span class='small info' id='org_count'><TMPL_VAR NAME="ORG_COUNT"></span>
+            <div id="org_list">
+                <select class="select small ui-widget ui-widget-content ui-corner-all" id="org_id" size="5" MULTIPLE>}
+                <TMPL_VAR NAME="ORG_LIST">
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="coge-table-header">Organism Information</div>
+            <div id='org_info' class="ui-corner-all ui-widget-content padded">
+                <TMPL_VAR NAME="ORG_INFO">
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-margin">
+        <div class="col-md-4">
+            <span class="coge-table-header">Genomes:</span>
+            <span class='small' id='genome_count'>
+                <TMPL_VAR NAME="GENOME_COUNT">
+            </span>
+            <div style="vertical-align: top;" id="genome_list">
+                <select class="select small ui-widget ui-widget-content ui-corner-all" size="5" MULTIPLE>
+                    <TMPL_VAR NAME="GENOME_LIST">
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="coge-table-header">Genome Information</div>
+            <div id="genome_info" class="ui-corner-all ui-widget-content padded">
+                <TMPL_VAR NAME="GENOME_INFO">
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-margin">
+        <div class="col-md-4">
+            <span class="coge-table-header">Datasets: </span>
+            <span class="small" id="ds_count"><TMPL_VAR NAME="DS_COUNT"></span>
+            <div style="vertical-align: top;" id="ds_list">
+                <select class="select small ui-widget ui-widget-content ui-corner-all" id="ds_id" SIZE="5" MULTIPLE >
+                    <TMPL_VAR NAME="DS_LIST">
+                </select>
+            </div>
+        </div>
+
+        <div class="col-md-8">
+            <div class="coge-table-header">Dataset Information</div>
+            <div id="ds_info" class="small ui-corner-all ui-widget-content padded">
+                <TMPL_VAR NAME="DS_INFO">
+            </div>
+        </div>
+    </div>
+
+    <div class="row row-margin">
+        <div class="col-md-4">
+            <span class="coge-table-header">Chromosomes:</span>
+            <span class='small' id='chr_count'><TMPL_VAR NAME="CHR_COUNT"></span>
+            <div id="chr_list" style="vertical-align: top;">
+                <select class="select small ui-widget ui-widget-content ui-corner-all" size="5">
+                    <TMPL_VAR NAME="CHR_LIST">
+                </select>
+            </div>
+        </div>
+        <div class="col-md-8">
+            <div class="coge-table-header">Chromosome Information</div>
+            <div id="chr_info" class="ui-corner-all ui-widget-content padded"><TMPL_VAR NAME="CHR_INFO"></div>
+        </div>
+    </div>
+
+    <div>
+          <div id="viewer" class="inline top">
+              <TMPL_VAR NAME="VIEWER">
+          </div>
+          <div id="get_seq" class="inline top" style="padding-right:1em;">
+              <TMPL_VAR NAME="GET_SEQ">
+          </div>
+    </div>
+    
+    <br><br>
+</div>
+
+<div class="dialog_box hidden" id="gc_histogram" title="Histogram of GC Content"><input type="hidden" id="feat_gc_min"></div>
+<div class="dialog_box hidden" id="wobble_gc_histogram" title="Histogram of Wobble GC Content for CDS"></div>
+<div class="dialog_box hidden" id="wobble_gc_diff_histogram" title="(CDS GC - wobble GC) Content Histogram"></div>
+<div class="dialog_box hidden" id="codon_usage_table" title="Codon Usage Table"></div>
+<div class="dialog_box hidden" id="aa_usage_table" title="Amino Acid Usage Table"></div>
+<div class="dialog_box hidden" id="chromosome_hist" title="Chromosome Size"></div>
+
+<div class="dialog hidden" title="Genome List" id="dialog_genomelist">
+	<div class="small info">Genomes: <span id="genomelist_count" class="bold">0<span></div>
+	<div>
+	    <div class="r">
+			<span class="ui-button ui-corner-all coge-button-sm" style="margin-top:0.5em;" onClick="remove_selected_genomes();">Remove</span><br>
+			<span class="ui-button ui-corner-all coge-button-sm" style="margin-top:0.5em;" onClick="clear_genome_list()">Clear</span><br>
+			<span class="ui-button ui-corner-all coge-button-sm" style="margin-top:0.5em;" onClick="$('#genomelist').sortSelect()">Sort</span><br>
+		</div>
+    	<select id="genomelist" MULTIPLE size="10" style="width:32em">
+        	<option id="genomelist_blank" value="null">No Genome Selected</option>
+        </select>
+    </div>
+    <div>
+		<div class="ui-button ui-corner-all coge-button-sm" style="margin-top:0.5em;" onClick="send_to_genomelist()">Send to GenomeList</div>
+	</div>
+</div>
+
+<div class="dialog hidden" title="GFF Exporter" id="gff_export">
+    <table class="small">
+     <tr>
+       <td>Do not generate features for ncRNA genes (CDS genes only)</td>
+       <td><input type=checkbox name="cds_only" id="cds_only"></td>
+     </tr>
+     <tr>
+       <td>Include feature annotations (descriptive text; Geneontology; etc)</td>
+       <td><input type=checkbox name="annos" id="annos" checked></td>
+     </tr>
+     <tr>
+       <td>Ensure that GFF Name tag is unique for each feature</td>
+       <td><input type=checkbox name="name_unique" id="name_unique" checked></td>
+     </tr>
+     <tr>
+       <td>Do not propagate duplicate annotations to children</td>
+       <td><input type=checkbox name="upa" id="upa" checked></td>
+     </tr>
+     <tr>
+       <td>For GFF "ID" and "Parent" tags, use unique:
+       <td>
+         <select id="gff_id_type">
+           <option value="name" selected>Name</option>
+           <option value="num">Number</option>
+         </select>
+     </tr>
+    </table>
+    <span class="ui-button ui-corner-all coge-button" onClick="export_gff()">Export GFF File</span><br><br>
+    <span class="small" id="export_gff_link"></span>
+</div>

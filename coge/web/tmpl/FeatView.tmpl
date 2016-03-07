@@ -1,0 +1,317 @@
+<SCRIPT language="JavaScript">
+
+$(function() {
+	$('#accn').focus();
+	$(".dialog").dialog({ autoOpen: false} );
+    if ($('#accn').val())
+    	search_chain(0);
+});
+
+function search_chain(val) {
+	$('#data_table').show(0);
+	accnminlen = 3;
+	annominlen = 8;
+	$('#anno').hide();
+	$('#accn_list').hide();
+	$('#Source').hide();
+	$('#FeatType').hide();
+	var searched = 0;
+	if ((val == 1)){
+	    $('#anno').html('<img src="./picts/animations/DNA_orbit_animated_small_third.gif" >').show();
+	    searched=1;
+	    go_cogesearch();
+	}
+	else if ($('#accn').val().length > accnminlen) {
+ 	    $('#anno').html('<img src="./picts/animations/DNA_orbit_animated_small_third.gif" >').show();
+ 	    searched=1;
+	    go_cogesearch();
+	}
+	else if ($('#annosearch').val().length > annominlen) {
+	    $('#anno').html('<img src="./picts/animations/DNA_orbit_animated_small_third.gif" >').show();
+	    searched=1;
+	    go_cogesearch();
+	}
+	
+	if (!searched)
+	    $('anno').html('Search not run.').show();
+}
+
+function go_cogesearch () {
+//	cogesearch(['args__accn','accn', 'args__anno','annosearch','args__type','type', 'args__org_id','org_id', 'args__feat_name_wild','feat_name_wild', 'args__feat_anno_wild', 'feat_anno_wild','args__org_name','org_name','args__org_desc','org_desc'],[source_search_chain]);
+	cogesearch(['args__accn','accn', 'args__anno','annosearch','args__type','type', 'args__org_id','org_id', 'args__org_name','org_name','args__org_desc','org_desc'],[source_search_chain]);
+}
+
+function source_search_chain (val) {
+	if (val)
+		$('#accn_list').html(val).show()
+	source_search(['args__accn','accn_select', 'args__org_id','org_id','args__org_name','org_name','args__org_desc','org_desc'], [get_types_chain]);
+}
+
+function get_types_chain (val1) {
+	if (val1)
+		$('#Source').html(val1).show();
+	get_types(['args__accn','accn_select', 'args__dsid','dsid', 'args__ftid','type'],[get_anno_chain]);
+}
+
+function get_anno_chain (val1,val2) {
+	if (val1) {
+		$('#FeatType').html(val1).show();
+		if ($('#add_all').is(":hidden")) $('#add_all').show(0);
+		if ($('#remove').is(":hidden")) $('#remove').show(0);
+		if ($('#clear').is(":hidden")) $('#clear').show(0);
+		if ($('#send').is(":hidden")) $('#send').show(0);
+	}
+	as = $('#accn_select').val();
+	tn = $('#Type_name').val();
+	get_anno(['args__accn','accn_select', 'args__type','Type_name', 'args__dsid','dsid','args__gstid','args__'+val2],[show_anno]);
+}
+
+function show_anno (anno) {
+	$('#anno').html(anno);
+	setup_button_states();
+}
+
+function timing(val) {
+	var searchterm;
+	
+	namere = /name/;
+	descre = /desc/;
+	if (namere.exec(val)) {
+	    $('#org_desc').val("Search").css({fontStyle: "italic"});
+	    searchterm = $('#'+val).val();
+	}
+	else if (descre.exec(val)) {
+	    $('#org_name').val("Search").css({fontStyle: "italic"}); ;
+	    searchterm = $('#'+val).val();
+	}
+	
+	if (!searchterm) val=0;
+	if (searchterm == "Search")
+	    searchterm = "";
+	if (pageObj.search && pageObj.search+val == searchterm + val)
+		return;
+	pageObj.search = searchterm + val;
+	if (pageObj.time)
+	    clearTimeout(pageObj.time);
+	re = /(\d+)/;
+	i = re.exec(val);
+	if (namere.exec(val))
+	    pageObj.time = setTimeout("get_orgs(['args__type','args__name','args__search','org_name'],['org_list'])",500);
+	else if (descre.exec(val))
+	    pageObj.time = setTimeout("get_orgs(['args__type','args__desc','args__search','org_desc'],['org_list'])",500);
+}
+
+function add_to_featlist(featname, featid, gstid){
+	var check = $('#'+featid+"_"+gstid).val();
+	if (check){
+	    alert('You have already added '+featname+'.');
+	    return;
+	}
+	var html = '<option id='+featid+'_'+gstid+' value='+featid+'_'+gstid+ ' >'+featname+'</option>';
+	$('#blank').remove();
+	$('#featlist_choice').prepend(html);
+	counting();
+}
+
+function add_all (val) {
+	var id_array = val.split('||');
+	for (var i =0; i < id_array.length; i++) {
+		var item = id_array[i].split('::');
+	    var html = '<option id='+item[0]+' value='+item[0]+ ' >'+item[1]+'</option>';
+	    $('#featlist_choice').append(html);
+	}
+	if (val) 
+		$('#blank').remove();
+	$('#featlist_choice').sortSelect();
+	counting();
+	$('#add_all_search').html('');
+	$('#add_all').show();
+}
+
+function clear_feat_list(){
+	var listlength = $('#featlist_choice').getLength();
+	for (var i=0; i<listlength;i++) 
+	    $('#'+$('#featlist_choice')[0][0].id).remove();
+	counting();
+}
+
+$.fn.sortSelect = function(){
+  this.each(
+	  function() {
+	  	if (this.nodeName.toLowerCase() != "select"){
+	  	  return;}
+	  	var opts = this.options;
+	  	var sortArray = [];
+	  	for (var i=0;i<opts.length;i++) {
+	  		sortArray[i] = {
+  				v: opts[i].value,
+  				t: opts[i].text,
+  				d: opts[i].id,
+  			}
+	  	}
+	  	sortArray.sort(
+  			function(obj1,obj2) {
+  				obj1t = obj1.t.toLowerCase(),
+  				obj2t = obj2.t.toLowerCase();
+  				if(obj1t == obj2t){
+  				  return 0;}
+  				return obj1t < obj2t ? -1 : 1;
+  			}
+	  	);
+	  	for (var i=0;i<opts.length;i++) {
+	  		opts[i].id = sortArray[i].d;
+	  		opts[i].text = sortArray[i].t;
+	  		opts[i].value = sortArray[i].v;
+	  	}
+	  }
+	);
+	return this;
+};
+
+function send_to_FeatList(){
+	var check = $('#featlist_choice').getLength();
+	if (($('#blank').val())||(check==0)){
+	    alert('You have not selected any features to examine. You must select at least one.');
+	    return;
+	}
+	var featlist = $('#featlist_choice').getLength(1);
+	parse_for_FeatList(['args__'+featlist],[send_to_url]);
+}
+
+function send_to_url(url){
+	window.open(url);
+}
+
+function counting(){
+	var count;
+	if ($('#blank').val())
+		count = 0;
+	else 
+		count = $('#featlist_choice').getLength();
+	if (count == 0) 
+		$('#featlist_choice').html('<option id=blank value=null>No Feature Selected</option>');
+	$('.count').html('Feature Count: '+count);
+}
+
+$.fn.getLength = function(val){
+	var opt_length;
+	var blastable;
+	this.each(
+		function() {
+	  		var opts = this.options;
+	  		opt_length = opts.length;
+	  		if (opt_length == 0) 
+	  			return opt_length;
+	  		blastable = opts[0].id;
+	  		if (val) {
+	  		  for(var i=1;i<opts.length;i++) {
+		  		blastable += ","+opts[i].id;
+		  		//need to chopoff last comma
+		  	  }
+	  		}
+	  	}
+	);
+	if (val) return blastable;
+	else return opt_length;
+};
+
+function onEnter(e) {
+	if (!e) 
+		var e = window.event;
+	if (e.which == 13) 
+		search_chain(1);
+}
+
+function search_bar(div_id){
+	if($('#'+div_id).val() == "Search") 
+		$('#'+div_id).val("").css({fontStyle: "normal"});
+}
+
+</SCRIPT>
+
+<TABLE class="ui-widget-content ui-corner-all coge-section">
+       <TR>
+         <TD nowrap>
+           Name:
+         <tD>
+          <input type="text" name="accn" id="accn" tabindex="1"  size="50" value="<TMPL_VAR NAME=ACCN>" onkeypress="onEnter(event);"/>
+<!--	Add wildcard to <select id="feat_name_wild" >
+	<option>neither</option>
+	<option>left</option>
+	<option>right</option>
+	<option>both</option>
+ 	</select>
+	side(s) of the name.-->
+       <TR>
+         <TD nowrap>
+          Annotation:
+         <tD nowrap>
+          <input type="text" name="annosearch" id="annosearch" tabindex="1"  size="50" value="<TMPL_VAR NAME=ANNO>" onkeypress="onEnter(event);"/>
+<!--	Add wildcard to <select id="feat_anno_wild" >
+	<option>neither</option>
+	<option>left</option>
+	<option>right</option>
+	<option selected>both</option>
+ 	</select>
+	side(s) of the annotation.
+	<tr><td><td><span class=small>Note: wildcards may slow search substantially</span>-->
+        <TR>
+	 <tD nowrap>
+          Type:
+         <TD><div id=search_type><TMPL_VAR NAME=FEAT_TYPE></div>
+        <TR>
+	 <tD valign="top" nowrap>
+          Organism:
+         <TD>
+         Name: <input type="text" size=11 onFocus="search_bar('org_name')" style="font-style:italic" value="Search" name="org_name" id="org_name" onKeyUp='timing("org_name");'><br>
+	 Description: <input type="text" size=11 value="Search" name = "org_desc" id="org_desc" style="font-style:italic" onFocus="search_bar('org_desc')" onKeyUp='timing("org_desc");'>
+	  <DIV id="org_list"><TMPL_VAR NAME="ORG_LIST"></DIV>
+        <tr>
+	<td><span class="ui-button ui-button-go ui-corner-all coge-button-lg" onclick="search_chain(1)">Search</span>
+	<td align=right><span class="ui-button ui-corner-all coge-button-lg" onclick="$('#feat_list').dialog('open');">Feature List</span>
+</TABLE>
+
+<div id="data_table" class="coge-result hidden">
+    <table>
+        <thead align=left>
+            <th>Matches</th>
+            <th>Types</th>
+            <th>Genomes</th>
+        </thead>
+    <tbody>
+        <tr valign=top>
+            <td valign=top>
+                <div class="" id="accn_list">
+                    <input type="hidden" id="accn_select">
+                </div>
+            </td>
+            <td valign=top>
+                <DIV class="" id="FeatType"></DIV>
+            </td>
+            <td valign=top>
+                <div class="" id="Source"></div>
+            </td>
+    </tbody>
+    </table>
+</div>
+
+<div id="anno" class="coge-result"><TMPL_VAR NAME="FID_ANNO"></div>
+
+<div class="dialog" id="codon_table" title="Codon Usage Table"></div>
+<div class="dialog" id="aa_table" title="Amino Acid Usage Table"></div>
+<div class="dialog" id="codon_aa_alignment" title="Amino Acid Usage Table"></div>
+
+<div class="dialog" title="Feature List" id="feat_list">
+    <span class="small count">Feature Count: 0</span><br>
+              <SELECT id="featlist_choice" SIZE="10" MULTIPLE onchange="get_anno(['args__featlist_choice','featlist_choice'],[show_anno])">
+              <option id=blank value=null>No Feature Selected</option>
+              </SELECT>
+ <br>
+    <span class="ui-button ui-corner-all" id=send onClick="$('#featlist_choice').sortSelect();">Sort List Alphabetically</span><br><br>
+    <span class="ui-button ui-corner-all" id=send onClick="send_to_FeatList()">Create Feature List</span><br><br>
+    <span class="ui-button ui-corner-all" id=add_all onClick="$('#add_all').hide();$('#add_all_search').html('<img src=./picts/animations/DNA_orbit_animated_small_third.gif >'); cogesearch_featids(['args__accn','accn', 'args__anno','annosearch','args__type','type', 'args__org_id','org_id','args__org_name','org_name','args__org_desc','org_desc'],[add_all]);">Add All Features</SPAN><br><br>
+      <span class="ui-button ui-corner-all" id=remove onClick="$('#'+$('#featlist_choice').val()).remove();counting();">Remove</span><br><br>
+    <span class="ui-button ui-corner-all" id=clear onClick="clear_feat_list()">Clear</span><br>
+
+    <div id=add_all_search></div>
+</div>

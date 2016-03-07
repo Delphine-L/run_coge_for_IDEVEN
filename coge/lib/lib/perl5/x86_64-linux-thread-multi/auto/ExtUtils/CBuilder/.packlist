@@ -1,0 +1,14 @@
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Base.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/Unix.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/VMS.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/Windows.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/Windows/BCC.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/Windows/GCC.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/Windows/MSVC.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/aix.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/android.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/cygwin.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/darwin.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/dec_osf.pm
+/homedir/lariviere/tool/coge/lib/lib/perl5/ExtUtils/CBuilder/Platform/os2.pm

@@ -1,0 +1,435 @@
+<tmpl_if name="error">
+    <div class="alert small">
+        <strong>Error: </strong><tmpl_var name="error">
+        <br>
+        <span class='small link' onclick="window.open('<tmpl_var name=log>')">
+            Analysis Log
+        </span>
+    </div>
+<tmpl_else>
+    <tmpl_if name="warning">
+        <div class="alert small">
+            <strong>Warning: </strong><tmpl_var name="warning">
+        </div>
+    </tmpl_if>
+<div id="data">
+<!--
+    <ul>
+        <li class="small"><a href="#results-1">Current Version</a></li>
+        <li class="small"><a href="#results-2">Test Version</a></li>
+    </ul>
+
+<div id="results-2">
+    <div class="info padded" style="padding-bottom: 15px;">
+    This is the new, experimental CoGe dotplot viewer!<br><br>It employs the latest HTML5 browser technology
+    to provide a fully dynamic and interactive dotplot display.  Note that it is still in a
+    prototype phase of development, so it can be fragile ... please let us know of any problems
+    you discover.  We will be adding features over the next few weeks at which point it will replace the old
+    dotplot viewer.<br><br>
+<b>Use the mouse scroll wheel to zoom in/out, the left button to pan (when zoomed in), and shift+left button to select a region.</b>
+    </div>
+    <div id="dotplot-errors" class="padded alert"></div>
+    <div id="dotplot" style="margin-top: 10px; z-index: 10;">
+        <h3 class="toolbar">
+            <input type="checkbox" id="allpoints">
+            <label for="allpoints">Show non-syntenic matches</label>
+            <span class="seperator"></span>
+            <input type="checkbox" checked="checked" id="boxes">
+            <label for="boxes">Show syntenic regions</label>
+            <span class="seperator"></span>
+            <button id="reset">Reset zoom level</button>
+            <span class="seperator"></span>
+            <label for="sortType">Sort Chromosomes by:</label>
+            <select id="sortType">
+                <option value="length">Length</option>
+                <option value="name">Name</option>
+            </select>
+            <button id="sort">Sort</button>
+        </h3>
+        <tmpl_include name="../widgets/Spinner.tmpl">
+    </div>
+    <br>
+    <div id="histogram" class="padded hidden" style="z-index: 10;">
+        <h3 class="toolbar">
+            <label for="hist_data">Dataset</label>
+            <select id="hist_data">
+            </select>
+            <span class="seperator"></span>
+            <label for="color_selector">Color Scheme</label>
+            <select id="color_selector">
+            </select>
+            <span class="seperator"></span>
+
+            <label for="transform">Transformation</label>
+            <select id="transform">
+            </select>
+        </h3>
+    </div>
+</div>
+-->
+<div id="results-1">
+    <div class="ui-widget-content ui-corner-all padded" id="synmap_zoom_box"
+    style="width: 350px; z-index: 1;">Zoom SynMap:
+        <table class="small">
+            <tr>
+                <td>Image Width</td>
+                <td>
+                    <input class="backbox" type="text" name="zoom_width" id="zoom_width" size="6" value="400">
+                </td>
+            </tr>
+
+            <tr>
+                <td>Ks, Kn, Kn/Ks cutoffs:</td>
+                <td>Min:
+
+                    <tmpl_if name="codeml_min">
+                        <input class="backbox" type="text" name="zoom_min" id="zoom_min" size="6"
+                            value="<tmpl_var name=codeml_min>" >
+                    <tmpl_else>
+                        <input class="backbox" type="text" name="zoom_min" id="zoom_min" size="6">
+                    </tmpl_if>
+                </td>
+                <td>Max:
+                    <tmpl_if name="codeml_max">
+                        <input class="backbox" type="text" name="zoom_max" id=zoom_max
+                            size=6 value="<tmpl_var name=codeml_max>" >
+                    <tmpl_else>
+                        <input class="backbox" type=text name=zoom_max id=zoom_max size=6>
+                    </tmpl_if>
+                </td>
+                </tr>
+        </table>
+    </div>
+
+    <ul class="padded">
+        <li>
+            <span class='small'>Axis metrics are in <tmpl_var name=axis_metric></span>
+            <br>
+            <span class='species small rotate'>
+                y-axis organism: <tmpl_var name=yorg_name>
+            </span>
+        </li>
+        <li>
+            <div style="float: left; margin: auto; white-space: nowrap;">
+                <tmpl_if name=ylabel>
+                    <img src="<tmpl_var name=ylabel>" style="vertical-align: top;">
+                </tmpl_if>
+
+                <ul style="display: inline-block">
+                    <li>
+                        <tmpl_if name=dotplot>
+                            <tmpl_var name=dotplot>
+                        </tmpl_if>
+                    </li>
+                    <tmpl_if name=xlabel>
+                        <li>
+                            <img src="<tmpl_var name=xlabel>">
+                        </li>
+                    </tmpl_if>
+                </ul>
+            </div>
+            <div style="clear: both;"></div>
+        </li>
+
+        <li>
+            <span class='species small'>
+                x-axis organism: <tmpl_var name=xorg_name>
+            </span>
+            <br>
+
+            <span class='small'>Axis metrics are in <tmpl_var name=axis_metric></span>
+            <br>
+
+            <span class='small'>Algorithm: <tmpl_var name="algorithm"></span>
+        </li>
+        <li>
+    <tmpl_if name="histogram">
+        <div class='small link ui-widget-content ui-corner-all padded' style='float:left'
+            onclick="window.open('<tmpl_var name=histogram>')">
+            Histogram of <tmpl_var name=ks_type> values.<br>
+        <img src="<tmpl_var name=histogram>">
+        </div>
+        <div style='clear: both;'> </div>
+    </tmpl_if>
+        </li>
+    </ul>
+</div>
+
+<ul class="padded">
+    <li>
+        <div class="ui-widget-content ui-corner-all padded">
+        <table id="files" class="small">
+            <th colspan="4">
+                Links and Downloads <span class="link small" onClick="$(this).hide(); $('#files tbody').fadeIn();">
+                click here to see more...</span>
+            </th>
+            <tbody class="hidden small">
+                <tmpl_loop name="files">
+                    <tr>
+                        <td><tmpl_var name="general"></td>
+                        <td><tmpl_var name="homolog"></td>
+                        <td><tmpl_var name="diagonal"></td>
+                        <td><tmpl_var name="result"></td>
+                    </tr>
+                </tmpl_loop>
+                </td>
+            </tbody>
+        </table>
+        </div>
+    </li>
+    <tmpl_if name=synsub>
+    <li>
+        <span  class='ui-button ui-corner-all'
+            onclick="window.open('<tmpl_var name=synsub>')">
+            Generate Substitution Matrix of Syntelogs
+        </span>
+    </li>
+    </tmpl_if>
+
+    <tmpl_if name=grimm>
+    <li>
+        <br>
+        <span class="ui-button ui-corner-all" id="grimm_link"
+        onclick="post_to_grimm('<tmpl_var name=seq1>','<tmpl_var name=seq2>')">
+            Rearrangement Analysis
+        </span>
+        <a class="small" href="<tmpl_var name=grimm_link>" target=_new>(Powered by GRIMM!)</a>
+    </li>
+    </tmpl_if>
+    <li>
+        <span>Regenerate this analysis:</span>
+        <a href="<tmpl_var name=link>" target=_new_synmap>
+            <tmpl_var name=link>
+        </a>
+    </li>
+    <li>
+        <span id="clear" style="font-size: 0.8em" class="ui-button ui-corner-all coge-button"
+            onClick="$('#results').hide(); $(this).hide(); $('#intro').fadeIn();" >
+            Clear Results
+        </span>
+    </li>
+</ul>
+<script>
+var BETA = "<tmpl_var name=beta>",
+    SYNTENIC_URL = "<tmpl_var name=json>",
+    ALLPOINTS_URL = "<tmpl_var name=allpairs>",
+    HIST_URL = "<tmpl_var name=hist>",
+    synmap = coge.synmap;
+
+$(document).ready(function(){
+    var plots,
+        raw,
+        sortHandler,
+        loaded = false,
+        layers = [],
+        dotplot = $("#dotplot"),
+        sortField = "length",
+        sortButton = $("#sort"),
+        sortType = $("#sortType"),
+        allpoints = $("#allpoints"),
+        boxes = $("#boxes"),
+        histogram = synmap.Histogram("#histogram"),
+        MAXIMUM_SIZE = 268435456;
+
+//    $("#data").tabs({
+//        select: function(event, ui) {
+//            if (ui.index === 1 && !plots) {
+//                setTimeout(setup, 200);
+//            }
+//        }
+//    });
+//
+//    // Swap tabs if BETA is set
+//    $("#data").tabs("select", (+BETA) ? 1 : 0);
+//
+//    function setup() {
+//        var request = checkRequestSize(SYNTENIC_URL);
+//            plots = synmap.PlotViewer(dotplot[0], "nucleotides");
+//
+//        synmap.Resizable(plots);
+//        synmap.Draggable(plots);
+//
+//        request.then(function() {
+//            var size;
+//
+//            if (request.status === 200) {
+//                size = +request.getResponseHeader("Content-Length")
+//            }
+//
+//            if (size > MAXIMUM_SIZE) {
+//                message = "The analysis was too large to be displayed." +
+//                    " Support for larger analyses will be added in the future.";
+//                $("#dotplot-errors").html(message);
+//                dotplot.remove();
+//                $(".toolbar").remove();
+//            } else {
+//                sortHandler = function() {
+//                    var sortfunc;
+//
+//                    dotplot.find(".spinner").remove();
+//                    sortField= sortType.val();
+//                    sortButton.attr("disabled", "disabled");
+//
+//                    if (sortField === "length") {
+//                        sortfunc = sortBy(sortField);
+//                    } else {
+//                        sortfunc = inverse(sortBy(sortField, compareAlphaNumeric));
+//                    }
+//
+//                    plots.setSort(sortfunc);
+//                    plots.loadPlots(raw);
+//                    plots.toggleLayer("syntenic_pairs", true);
+//                    plots.toggleLayer("pairs", allpoints.is(":checked"));
+//                    plots.toggleLayer("syntenic_blocks", boxes.is(":checked"));
+//                };
+//                $("#toolbar").buttonset();
+//
+//                sortType.on("change", function(e) {
+//                    if ($(this).val() === sortField) {
+//                        sortButton.attr("disabled", "disabled");
+//                        sortButton.unbind();
+//                    } else {
+//                        sortButton.removeAttr("disabled");
+//                        sortButton.on("click", sortHandler);
+//                    }
+//                });
+//
+//                allpoints.unbind().on("change", function() {
+//                    plots.toggleLayer("pairs", $(this).is(":checked"));
+//                });
+//
+//                boxes.on("click", function(e) {
+//                    plots.toggleLayer("syntenic_blocks", $(this).is(":checked"));
+//                });
+//
+//                $("#reset").on("click", function(e) {
+//                    plots.reset();
+//                });
+//
+//                var response = $.ajax({
+//                    url: SYNTENIC_URL,
+//                    dataType: "json"
+//                });
+//
+//                //FIXME This should only be called when the file exists
+//                response.then(function(json) {
+//                    raw = json;
+//                    var request = checkRequestSize(ALLPOINTS_URL);
+//
+//                    request.then(function() {
+//                        var size;
+//                        if (request.status === 200) {
+//                            size = +request.getResponseHeader("Content-Length")
+//                        }
+//
+//                        if (size < MAXIMUM_SIZE) {
+//                            $.getJSON(ALLPOINTS_URL, function(json) {
+//                                for (var layer in json.layers) {
+//                                    raw.layers[layer] = json.layers[layer];
+//                                    sortHandler();
+//
+//                                    //FIXME This should only be called when the file exists
+//                                    $.getJSON(HIST_URL, loadHistogram);
+//                                }
+//                            });
+//                        } else {
+//                            var label = $("label[for=" +allpoints.attr("id") + "]");
+//                            label.attr("title", "Can't display non-syntenic matches too much data.");
+//                            label.css("border-bottom", "1px dotted");
+//                            allpoints.attr("disabled", "disabled");
+//                            allpoints.unbind();
+//
+//                            //FIXME This should only be called when the file exists
+//                            $.getJSON(HIST_URL, loadHistogram);
+//                        }
+//
+//                    });
+//                    sortHandler();
+//                });
+//            }
+//        });
+//    }
+//
+//    function loadHistogram(json) {
+//        $("#histogram").removeClass("hidden");
+//
+//        var select_data,
+//            models,
+//            selector;
+//
+//        models = _.map(json.datasets.histogram, function(dataset) {
+//            return {
+//                title: dataset.title,
+//                data: synmap.Dataset(dataset.data)
+//            };
+//        });
+//
+//        transform_selector = synmap.Dropdown("#transform", [
+//            { title: "No transformation", data: function(x) { return x; }},
+//            { title: "Log10", data: transform }
+//        ]);
+//        transform_selector.selected(function(func, index) {
+//            histogram.setTransform(func, index);
+//            updateColors();
+//        });
+//
+//        color_selector = coge.color.dropdown("#color_selector");
+//        color_selector.selected(function(colorScheme) {
+//            histogram.setColorScheme(colorScheme);
+//            updateColors();
+//        });
+//        data_selector = synmap.Dropdown("#hist_data", models);
+//        data_selector.selected(function(model) {
+//            histogram.setModel(model);
+//            var index = histogram.getSelectedTransform();
+//            if (index !== undefined) {
+//                transform_selector.select(index);
+//            } else {
+//                transform_selector.select(0);
+//            }
+//
+//            updateColors();
+//        });
+//
+//        histogram.onSelection(plots.filter);
+//        // Update the model and color scheme
+//        data_selector.select(0);
+//        color_selector.select(0);
+//
+//        synmap.Resizable(histogram);
+//        synmap.Draggable(histogram);
+//
+//        // attach color scheme updating to change event
+//        plots.onChanged(updateColors);
+//    }
+//
+//    //FIXME: This should be something that is controlled by the plot
+//    function updateColors() {
+//        var layer = plots.getLayer("syntenic_pairs"),
+//            colors = histogram.colors(transform);
+//
+//        for(var key in colors) {
+//            if (key in layer.lines) {
+//                layer.lines[key].color = colors[key];
+//            }
+//        }
+//
+//        plots.update();
+//    }
+//
+//    function transform(data) {
+//        // non-zero min
+//        var extent = d3.extent(data.filter(function(x) {
+//            return x !== 0;
+//        }));
+//
+//        return data.map(function(item) {
+//            if (item === 0) item = extent[0];
+//            if (item === 0) return 0;
+//
+//            return coge.utils.log10(item);
+//        });
+//    }
+});
+</script>
+</tmpl_if>

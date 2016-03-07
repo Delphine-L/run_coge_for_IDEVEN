@@ -1,0 +1,88 @@
+=head2 Thu May  7 11:06:01 2015: C<Module> L<CoGe|CoGe>
+
+=over 4
+
+=item *
+
+C<installed into: /homedir/lariviere/tool/coge/lib//share/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: >
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu May  7 11:11:29 2015: C<Module> L<Data::Validate::URI|Data::Validate::URI>
+
+=over 4
+
+=item *
+
+C<installed into: /homedir/lariviere/tool/coge/lib//share/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.01>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu May  7 11:13:40 2015: C<Module> L<Data::Validate::Domain|Data::Validate::Domain>
+
+=over 4
+
+=item *
+
+C<installed into: /homedir/lariviere/tool/coge/lib//share/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 0.11>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+
+=head2 Thu May  7 11:14:50 2015: C<Module> L<Net::Domain::TLD|Net::Domain::TLD>
+
+=over 4
+
+=item *
+
+C<installed into: /homedir/lariviere/tool/coge/lib//share/perl5>
+
+=item *
+
+C<LINKTYPE: dynamic>
+
+=item *
+
+C<VERSION: 1.73>
+
+=item *
+
+C<EXE_FILES: >
+
+=back
+

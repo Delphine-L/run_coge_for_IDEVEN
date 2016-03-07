@@ -1,0 +1,291 @@
+<TMPL_IF NAME=MAIN>
+
+<link rel="stylesheet" href="js/slickgrid/slick.grid.css" type="text/css"/>
+<link rel="stylesheet" href="js/slickgrid/controls/slick.pager.css" type="text/css"/>
+<link rel="stylesheet" href="js/slickgrid/css/smoothness/jquery-ui-1.8.16.custom.css" type="text/css"/>
+<link rel="stylesheet" href="js/slickgrid/controls/slick.columnpicker.css" type="text/css"/>
+  <style>
+    .cell-centered {
+		text-align: center;
+		vertical-align: middle;
+		font-size: small;
+    }
+    .cell-normal {
+		vertical-align: middle;
+		font-size: small;
+    }
+  </style>
+
+<!--<script src="js/slickgrid/lib/jquery-1.7.min.js"></script>-->
+<script src="js/slickgrid/lib/jquery-ui-1.8.16.custom.min.js"></script>
+<script src="js/slickgrid/lib/jquery.event.drag-2.0.min.js"></script>
+
+<script src="js/slickgrid/slick.core.js"></script>
+<script src="js/slickgrid/slick.formatters.js"></script>
+<script src="js/slickgrid/slick.editors.js"></script>
+<script src="js/slickgrid/plugins/slick.rowselectionmodel.js"></script>
+<script src="js/slickgrid/slick.grid.js"></script>
+<script src="js/slickgrid/slick.dataview.js"></script>
+<script src="js/slickgrid/controls/slick.pager.js"></script>
+<script src="js/slickgrid/controls/slick.columnpicker.js"></script>
+
+<script>
+var data = [];
+var grid;
+var dataView;
+var columns = [
+	{id: "starred", name: "", field: "starred", maxWidth: 25, cssClass: "cell-centered",
+		formatter: function (row, cell, value, columnDef, dataContext) {
+			if (value) {
+				return '<img id="'+dataContext['id']+'" src="picts/star-full.png" onclick="toggle_star(this);">'
+			}
+			return '<img id="'+dataContext['id']+'" src="picts/star-hollow.png" onclick="toggle_star(this);">';
+		}},
+	{id: "date_time", name: "Date/Time", field: "date_time", minWidth: 160, maxWidth: 160, sortable: true, cssClass: "cell-centered"},
+	{id: "user", name: "User", field: "user", minWidth: 30, maxWidth: 80, sortable: true, cssClass: "cell-normal"/*,
+		formatter: function ( row, cell, value, columnDef, dataContext ) {
+            return '<a target="_blank" href="User.pl?name=' + value + '">' + value + '</a>';
+        }*/},
+	{id: "page", name: "Page", field: "page", minWidth: 90, maxWidth: 100, sortable: true, cssClass: "cell-normal"},
+	{id: "description", name: "Description", field: "description", minWidth: 100, sortable: true, cssClass: "cell-normal",
+		formatter: function ( row, cell, value, columnDef, dataContext ) {
+            return '<span>' + value + '</span>';
+        }},
+	{id: "link", name: "Link", field: "link", minWidth: 100, maxWidth: 250, cssClass: "cell-normal",
+		formatter: function ( row, cell, value, columnDef, dataContext ) {
+            return '<a target="_blank" href="' + value + '">' + value + '</a>';
+        }},
+	{id: "comment", name: "Comments (click to edit)", field: "comment", minWidth: 100, sortable: true, cssClass: "cell-normal",
+		editor: Slick.Editors.Text, validator: requiredFieldValidator}
+];
+
+var options = {
+	editable: true,
+	enableCellNavigation: true,
+	asyncEditorLoading: true,
+	forceFitColumns: true,
+};
+
+var sortcol;
+
+$(function () {
+	$.ajaxSetup({
+		type: "POST",
+		url: "<TMPL_VAR NAME=PAGE_NAME>",
+		dataType: "html",
+		cache: false,
+	});
+
+	//$(".dialog_box").dialog({autoOpen: false, width: 600});
+
+	$('#filter_count').html('Loading ... <img src="picts/ajax-loader.gif"/>');
+
+	$.ajax({
+		data: {
+			jquery_ajax: 1,
+			fname: 'get_history_for_user',
+			time_range: 0,
+		},
+		success : function(val) {
+			data = jQuery.parseJSON(val);
+			dataView.beginUpdate();
+			dataView.setItems(data);
+			dataView.setFilterArgs({
+				show: 0,
+				searchType: 1,
+				searchString: ''
+			});
+			dataView.setFilter(myFilter);
+			dataView.endUpdate();
+			updateFilter();
+		}
+	});
+
+	dataView = new Slick.Data.DataView({ inlineFilters: true });
+	grid = new Slick.Grid("#myGrid", dataView, columns, options);
+
+	var columnpicker = new Slick.Controls.ColumnPicker(columns, grid, options);
+
+	grid.onCellChange.subscribe(function (e, args) {
+		$.ajax({
+			data: {
+				jquery_ajax: 1,
+				fname: 'update_comment',
+				log_id: args.item.id,
+				comment: args.item.comment
+			},
+			success: function() {
+				dataView.updateItem(args.item.id, args.item);
+			}
+		});
+	});
+
+	grid.onSort.subscribe(function (e, args) {
+		sortcol = args.sortCol.field;
+		dataView.sort(comparer, args.sortAsc);
+	});
+
+	// Wire up model events to drive the grid
+	dataView.onRowCountChanged.subscribe(function (e, args) {
+		grid.updateRowCount();
+		grid.render();
+		if ($("#myGrid").is(":not(visible)")) {
+			$("#myGrid").slideDown();
+		}
+	});
+	dataView.onRowsChanged.subscribe(function (e, args) {
+		grid.invalidateRows(args.rows);
+		grid.render();
+	});
+
+	// Wire up the show selector to apply the filter to the model
+	$("#show_select,#search_type").change(function (e) {
+		updateFilter();
+	});
+
+	// Wire up the search textbox to apply the filter to the model
+	$("#search_input").keyup(function (e) {
+		Slick.GlobalEditorLock.cancelCurrentEdit();
+
+		if (e.which == 27) { // Clear on Esc
+			this.value = "";
+		}
+
+		updateFilter();
+	});
+});
+
+function comparer(a, b) {
+	if (!sortcol) { return 0; }
+	var x = a[sortcol], y = b[sortcol];
+	return (x == y ? 0 : (x > y ? 1 : -1));
+}
+
+function requiredFieldValidator(value) {
+	return {valid: true, msg: null};
+}
+
+function myFilter(item, args) {
+	var date_time 	= (item['date_time'] ? item['date_time'].toLowerCase() : '');
+	var user_name 	= (item['user'] ? item['user'].toLowerCase() : '');
+	var description = (item['description'] ? item['description'].toLowerCase() : '');
+	var page 		= (item['page'] ? item['page'].toLowerCase() : '');
+	var link 		= (item['link'] ? item['link'].toLowerCase() : '');
+	var comment 	= (item['comment'] ? item['comment'].toLowerCase() : '');
+
+	var show = 1;
+	if (args.show != 0) {
+		if (args.show == -1) { // Starred
+			show = item['starred'];
+		}
+		else if (args.show == -2) { // Commented
+			show = comment;
+		}
+		else if (args.show == -3) { // Mine
+			show = (user_name == '<TMPL_VAR NAME="USER_NAME">');
+		}
+		else if (args.show > 0) { // Time Range
+			var diff = new Date() - new Date(date_time.replace(/-/g, '/'));
+			show = (diff <= args.show*60*60*1000);
+		}
+	}
+	if (!show) {
+		return false;
+	}
+
+	if (args.searchString != "") {
+		//FIXME optimize
+		if (args.searchType == 1) { // Contains
+			if (date_time.indexOf(args.searchString) == -1 &&
+				user_name.indexOf(args.searchString) == -1 &&
+				description.indexOf(args.searchString) == -1 &&
+				page.indexOf(args.searchString) == -1 &&
+				link.indexOf(args.searchString) == -1 &&
+				comment.toLowerCase().indexOf(args.searchString) == -1 )
+			{
+				return false;
+			}
+		}
+		else { // Does not contain
+			if (date_time.indexOf(args.searchString) != -1 ||
+				user_name.indexOf(args.searchString) != -1 ||
+				description.indexOf(args.searchString) != -1 ||
+				page.indexOf(args.searchString) != -1 ||
+				link.indexOf(args.searchString) != -1 ||
+				comment.toLowerCase().indexOf(args.searchString) != -1 )
+			{
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
+function updateFilter() {
+	dataView.setFilterArgs({
+		show: $('#show_select').val(),
+		searchType: $('#search_type').val(),
+		searchString: $('#search_input').val().toLowerCase()
+	});
+    dataView.refresh();
+    $('#filter_count').html('Showing ' + dataView.getLength() + ' of ' + data.length + ' results');
+}
+
+function toggle_star(img) {
+	$.ajax({
+		data: {
+			jquery_ajax: 1,
+			fname: 'toggle_star',
+			log_id: img.id,
+		},
+		success :  function(val) {
+			if (val == 0) { $(img).attr({src:"picts/star-hollow.png"}); }
+			else { $(img).attr({src:"picts/star-full.png"}); }
+		}
+	});
+}
+
+</SCRIPT>
+
+<div class="small" style="padding-top:15px;padding-bottom:5px;height:27px;">
+  <span style="padding-right:10px">
+  Show:
+  <select id="show_select">
+   <option value="0">All</option>
+   <TMPL_IF NAME="OPTION_ALL"><option selected='selected' value="-3">Mine</option></TMPL_IF>
+   <option value="-1">Starred</option>
+   <option value="-2">Comments</option>
+   <option value="1">Last hour</option>
+   <option value="12">Last 12 hrs</option>
+   <option value="24">Last 24 hrs</option>
+   <option value="168">Last week</option>
+   <option value="720">Last month</option>
+  </select>
+ </span>
+ <span>
+  Filter:
+  <input id="search_input" type="text">
+  <select id="search_type">
+   <option value="1">Contains</option>
+   <option value="0">Does NOT contain</option>
+  </select>
+  <span id='filter_count' style="margin-left:20px;color:darkgray;font-style:italic;"></span>
+ </span>
+</div>
+
+<div id="myGrid" style="max-width:95%;height:80%;display:none;"></div>
+
+</TMPL_IF>
+
+<TMPL_IF NAME='LOGIN'>
+	<TMPL_INCLUDE NAME="widgets/Login.tmpl">
+</TMPL_IF>
+
+<TMPL_IF NAME='ADMIN_AREA'>
+<!--
+<hr>
+Admin Functions:<br>
+none at the moment
+-->
+</TMPL_IF>

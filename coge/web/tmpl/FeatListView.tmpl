@@ -1,0 +1,270 @@
+<SCRIPT language="javascript">
+
+function edit_list_reload(lid)
+ {
+   edit_list(['args__'+lid],['main']);
+ }
+
+function change( info ) {
+        document.getElementById("info").innerHTML = info;
+}
+
+</SCRIPT>
+
+<TMPL_IF NAME="FEAT_LIST">
+<DIV id="main">
+<font class="Title3"><TMPL_VAR NAME="LIST_COUNT">Feature Lists:</font>  <font class="data5">(Showing <TMPL_VAR NAME="LIST_START"> - <TMPL_VAR NAME="LIST_STOP">)&nbsp&nbsp&nbsp<TMPL_VAR NAME="FIRST"><TMPL_VAR NAME="PREVIOUS"> <TMPL_VAR NAME="NEXT"><TMPL_VAR NAME="LAST">
+<TABLE class="columns">
+ <TR align = left>
+  <TD>
+  <TD>
+  <TH>Name
+  <TH>Description
+  <TH>Notes
+  <TH>Group
+  <TH>Editors
+  <TH>Readers
+  <TH>Feature count
+<TMPL_LOOP NAME=FEAT_LISTS>
+
+ <TR valign=top class="<TMPL_VAR NAME=ROW_BG>">
+  <TD><input type="IMAGE" src="picts/edit.png"  onClick="edit_list(['args__<TMPL_VAR NAME=LIST_ID>'],['main']);">
+  <TD><input type="IMAGE" src="picts/delete.png"  onClick=" if (confirm('Are you sure you wish to delete this list?')){ delete_list(['args__<TMPL_VAR NAME=LIST_ID>'], []), window.location.reload();}">
+  <TD class="species"> <TMPL_VAR NAME=LIST_NAME>
+  <TD><TMPL_VAR NAME=LIST_DESC>
+  <TD><TMPL_VAR NAME=LIST_NOTE>
+  <TD><TMPL_VAR NAME=LIST_GROUP>
+  <TD><TMPL_VAR NAME=LIST_EDITORS>
+  <TD><TMPL_VAR NAME=LIST_READERS>
+  <TD>
+      <DIV id="showfeat<TMPL_VAR NAME=LIST_ID>" class="l">
+      <input type="IMAGE" src="picts/close.png" onClick="expand_list(['args__<TMPL_VAR NAME=LIST_ID>'],['FLID<TMPL_VAR NAME=LIST_ID>', 'showfeat<TMPL_VAR NAME=LIST_ID>'])">
+      </DIV>
+      <DIV id="FLID<TMPL_VAR NAME=LIST_ID>" class="l">
+      <TMPL_VAR NAME=FEATURE_COUNT>
+      </DIV>
+</TMPL_LOOP>
+
+</TABLE>
+</DIV>
+
+<DIV id="tmp"></DIV>
+
+</TMPL_IF>
+
+<TMPL_IF NAME="CREATE_LIST">
+<DIV MAIN>
+
+</DIV>
+</TMPL_IF>
+
+<TMPL_IF NAME="EDIT_LIST">
+
+<DIV id="main">
+<font class = "title2">Feature List Editor</font>
+<div><font class="title3"><TMPL_VAR LIST_NAME></font>: <TMPL_VAR LIST_DESC></div>
+
+<TABLE>
+ <TR>
+  <TD>
+  <TH>Organism
+  <TH>Dataset
+  <TH>Type
+  <TH>Location
+  <TH>Name(s)
+  <TH>Preferred Name
+<TMPL_LOOP NAME=FEATURE_INFO>
+ <DIV id="FID<TMPL_VAR NAME=FEAT_ID>">
+ <TR class="<TMPL_VAR NAME=ROW_BG>">
+  <TD><input type="IMAGE" src="picts/delete.png"  onClick=" if (confirm('Are you sure you wish to delete this list?')){ delete_feature(['args__<TMPL_VAR NAME=FEAT_ID>', 'args__<TMPL_VAR NAME=LIST_ID>'], [edit_list_reload]) }">
+  <TD><TMPL_VAR NAME=FEAT_ORG>
+  <TD><TMPL_VAR NAME=FEAT_DATA>
+  <TD><TMPL_VAR NAME=FEAT_LOC>
+  <TD><TMPL_VAR NAME=FEAT_TYPE>
+  <TD><TMPL_VAR NAME=FEAT_NAME>
+  <TD><TMPL_VAR NAME=FEAT_PNAME>
+ </DIV>
+</TMPL_LOOP>
+
+</TABLE>
+<input type="text" size="7" class="backbox" id="add_feat"><input type="submit" value="Add Feature" onClick="add_feature(['add_feat','args__<TMPL_VAR NAME=LIST_ID>'],[edit_list_reload]);">
+</div>
+
+</TMPL_IF>
+
+<TMPL_IF NAME="EXPAND_LIST">
+<TABLE>
+ <TR>
+  <TH>Type
+  <TH>Preferred Name
+  <TH>Description
+  <TH>Name(s)
+  <TH>Organism
+  <TH>Location
+<TMPL_LOOP NAME=FEATURE_INFO>
+ <DIV id="FID<TMPL_VAR NAME=FEAT_ID>">
+ <TR>
+  <TD><TMPL_VAR NAME=FEAT_TYPE>
+  <TD><TMPL_VAR NAME=FEAT_PNAME>
+  <TD><TMPL_VAR NAME=FEAT_DESC>
+  <TD nowrap><TMPL_VAR NAME=FEAT_NAME>
+  <TD nowrap><TMPL_VAR NAME=FEAT_ORG>
+  <TD nowrap><TMPL_VAR NAME=LOC>
+
+ </DIV>
+</TMPL_LOOP>
+
+</TABLE>
+
+</TMPL_IF>
+
+<TMPL_IF NAME="LIST_GROUP">
+
+<DIV id="main">
+<font class="title3">Feature List Groups:</font>
+<TABLE class="columns">
+ <TR align = left>
+  <TD>
+  <TD>
+  <TH>Name
+  <TH>Description
+  <TH>Notes
+  <TH>Feature List count
+<TMPL_LOOP NAME=LIST_GROUPS>
+
+ <TR valign=top class="<TMPL_VAR NAME=ROW_BG>">
+  <TD><input type="IMAGE" src="picts/edit.png"  onClick="edit_group(['args__<TMPL_VAR NAME=GROUP_ID>'],['main']);">
+  <TD><input type="IMAGE" src="picts/delete.png"  onClick=" if (confirm('Are you sure you wish to delete this group?')){ delete_group(['args__<TMPL_VAR NAME=GROUP_ID>'], []), window.location.reload();}">
+  <TD class="species"> <a onclick="group_view(['args__<TMPL_VAR NAME=GROUP_ID>'],['main'])"><TMPL_VAR NAME=GROUP_NAME></a>
+  <TD><TMPL_VAR NAME=GROUP_DESC>
+  <TD><TMPL_VAR NAME=GROUP_NOTE>
+  <TD>
+      <DIV id="showlist<TMPL_VAR NAME=GROUP_ID>" class="l">
+      <input type="IMAGE" src="picts/close.png" onClick="expand_group(['args__<TMPL_VAR NAME=GROUP_ID>'],['GID<TMPL_VAR NAME=GROUP_ID>', 'showlist<TMPL_VAR NAME=GROUP_ID>'])">
+      </DIV>
+      <DIV id="GID<TMPL_VAR NAME=GROUP_ID>" class="l">
+      <TMPL_VAR NAME=GROUP_COUNT>
+      </DIV>
+</TMPL_LOOP>
+
+</TABLE>
+</DIV>
+
+</TMPL_IF>
+
+<TMPL_IF NAME="EXPAND_GROUP">
+<TABLE>
+ <TR>
+  <TH>Name
+  <TH>Description
+  <TH>Feature count
+
+<TMPL_LOOP NAME=LIST_INFO>
+ <DIV id="LID<TMPL_VAR NAME=LIST_ID>">
+ <TR>
+  <TD><a onClick="edit_list(['args__<TMPL_VAR NAME=LIST_ID>'],['main'])"><TMPL_VAR NAME=LIST_NAME></a>
+  <TD><TMPL_VAR NAME=LIST_DESC>
+  <TD><TMPL_VAR NAME=FEAT_COUNT>
+ </DIV>
+</TMPL_LOOP>
+
+</TABLE>
+
+</TMPL_IF>
+
+<TMPL_IF NAME=FOOT>
+
+<input type="submit" name="Show Feature Lists" value="Show Feature Lists" onClick="window.location='FeatListView.pl?fl=1'">
+<input type="submit" name="Show List Groups" value="Show  List Groups" onClick="window.location='FeatListView.pl?flg=1'">
+</TMPL_IF>
+
+<TMPL_IF NAME=GROUP_VIEW>
+<DIV id="main">
+<font class="title2">Group view:</font><br>
+<font class="title3"><TMPL_VAR NAME="NAME"></font> <TMPL_VAR NAME="DESC"><BR>
+<font class="species"><TMPL_VAR NAME="NOTES"></font>
+<table class="columns">
+ <TR align = left>
+  <TH>List Name
+  <TH>Description
+  <TH>Notes
+  <TH>Features
+<TMPL_LOOP NAME="LIST_LOOP">
+ <TR valign="top" class="<TMPL_VAR NAME=ROW_BG>">
+  <TD><a onClick="edit_list(['args__<TMPL_VAR NAME=LIST_ID>'],['main'])"><TMPL_VAR NAME=LIST_NAME>
+  <TD><TMPL_VAR NAME=LIST_DESC>
+  <TD><TMPL_VAR NAME=LIST_NOTE>
+  <TD>
+      <DIV id="showfeat<TMPL_VAR NAME=LIST_ID>" class="l">
+      <input type="IMAGE" src="picts/close.png" onClick="expand_list(['args__<TMPL_VAR NAME=LIST_ID>'],['FLID<TMPL_VAR NAME=LIST_ID>', 'showfeat<TMPL_VAR NAME=LIST_ID>'])">
+      </DIV>
+      <DIV id="FLID<TMPL_VAR NAME=LIST_ID>" class="l">
+      <TMPL_VAR NAME=FEAT_COUNT>
+      </DIV>
+</TMPL_LOOP>
+</TABLE>
+
+<table class="columns">
+ <tr align="left">
+  <th>Organism
+  <th>Location
+  <th>Features
+  <th>Actions
+ <TMPL_LOOP NAME=ORG_LOOP>
+ <tr valign="top" class="<TMPL_VAR NAME=ROW_BG>">
+  <td><TMPL_VAR NAME=ORG_NAME>
+  <td><TMPL_VAR NAME=LOC>
+  <td><TMPL_VAR NAME=FEAT_COUNT>
+  <td><TMPL_VAR NAME=ACTIONS>
+ </TMPL_LOOP>
+</TABLE>
+<DIV id="genomic_view"></DIV>
+
+</DIV>
+</TMPL_IF>
+
+<TMPL_IF NAME=ADD_IMAGE>
+ <div id="add_image">
+  <input type="submit" value="add image?" onClick="add_image_box(['args__<TMPL_VAR NAME=TYPE>', 'args__<TMPL_VAR NAME=ID>'],['add_image'])">
+ </div>
+</TMPL_IF>
+
+<TMPL_IF NAME=SHOW_IMAGE>
+<table class="columns">
+ <tr align="left">
+  <TH>
+  <TH>Image
+  <TH>Name
+  <TH>Description
+
+ <TMPL_LOOP NAME=IMAGE_LOOP>
+ <tr valign="top" class="<TMPL_VAR NAME=ROW_BG>">
+<!--   <TD><input type="IMAGE" src="picts/edit.png"  onClick="edit_image(['args__<TMPL_VAR NAME=LIST_ID>'],['main']);">-->
+   <TD><input type="IMAGE" src="picts/delete.png" onClick=" if (confirm('Are you sure you wish to delete this image?')){ delete_image(['args__<TMPL_VAR NAME=CID>', 'args__<TMPL_VAR NAME=TYPE>'], []), window.location='<TMPL_VAR RELOAD>';}">
+   <td><TMPL_VAR NAME=NAME>
+   <td><TMPL_VAR NAME=DESC>
+   <td><TMPL_VAR NAME=IMAGE>
+
+ </TMPL_LOOP>
+ </table>
+</TMPL_IF>
+
+<TMPL_IF NAME=ADD_IMG>
+<form method="post" enctype="multipart/form-data">
+<input type="hidden" name="add_image" id = "add_image" value="1">
+<input type="hidden" name="type" id = "type" value="<TMPL_VAR NAME=TYPE>">
+<input type="hidden" name="id" id = "id" value="<TMPL_VAR NAME=ID>">
+<DIV>Please select an image to upload:
+<input type = "file" class = "backbox" name= "file">
+<table class="columns">
+ <TR>
+  <TH>Name:
+  <TD><input class="backbox" type="text" name="name" id="name" size="20" maxlength="50" />
+ <TR>
+  <TH>Description:
+  <TD><textarea class="backbox" type="textarea" name="desc" id="desc" rows="5" cols="50" maxlength="2048" /></textarea>
+</table>
+<input type = "submit" value="Add Image">
+</form>
+</DIV>
+</TMPL_IF>
