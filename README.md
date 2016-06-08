@@ -12,16 +12,15 @@ Run the scipts in that order, wait before the end of all calculations to run the
 
 If you are running the calculation for all species
 
-
-python2.7 genom_comp.py
-python2.7 bed_crea.py
-python2.7 filt_tandem.py
-python2.7 dagC_format.py
-python2.7 genomic_order.py
-python2.7  dagChainer.py
-python2.7 quota_align.py
-python2.7 dag_gene_order.py
-python2.7  ks_fast.py
+  python2.7 genom_comp.py
+  python2.7 bed_crea.py
+  python2.7 filt_tandem.py
+  python2.7 dagC_format.py
+  python2.7 genomic_order.py
+  python2.7 dagChainer.py
+  python2.7 quota_align.py
+  python2.7 dag_gene_order.py
+  python2.7 ks_fast.py
 
 
 If you just wan to add a species, use the SPECIE_CODE (eg:  ARATH)
