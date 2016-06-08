@@ -1,5 +1,3 @@
-# run_coge_for_IDEVEN
-
 # Precomputing of syntenic data for IDEVEN using coge custom install
 
 In config.ini, configure the path for the installs and for the repository containing the data.
